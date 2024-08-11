@@ -1,3 +1,4 @@
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,6 +26,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -212,6 +215,13 @@ fun CommunityScreen() {
             )
         }
         ThinHorizontalLine()
+        Box(
+            modifier = Modifier
+                .fillMaxSize(),
+            contentAlignment = Alignment.BottomEnd
+        ) {
+            DrawCircleWithCross()
+        }
     }
 }
 
@@ -324,6 +334,38 @@ fun SmallVerticalLine() {
             .background(Color.Black.copy(alpha = 0.3f)) // 선의 색상 및 투명도 설정
             .padding(top = 3.dp)
     )
+}
+
+@Composable
+fun DrawCircleWithCross() {
+    Canvas(modifier = Modifier) {
+        val radius = 90f
+        val centerX = size.width - radius
+        val centerY = size.height - radius
+
+        // 동그라미 그리기
+        drawCircle(
+            color = Color(0xFF321D87),
+            center = androidx.compose.ui.geometry.Offset(centerX, centerY),
+            radius = radius
+        )
+
+        // 십자가 그리기
+        drawLine(
+            color = Color.White,
+            start = androidx.compose.ui.geometry.Offset((centerX - radius / 2.3).toFloat(), centerY),
+            end = androidx.compose.ui.geometry.Offset((centerX + radius / 2.3).toFloat(), centerY),
+            strokeWidth = 12f,
+            cap = StrokeCap.Round
+        )
+        drawLine(
+            color = Color.White,
+            start = androidx.compose.ui.geometry.Offset(centerX, (centerY - radius / 2.3).toFloat()),
+            end = androidx.compose.ui.geometry.Offset(centerX, (centerY + radius / 2.3).toFloat()),
+            strokeWidth = 12f,
+            cap = StrokeCap.Round
+        )
+    }
 }
 
 @Preview(showBackground = true)
