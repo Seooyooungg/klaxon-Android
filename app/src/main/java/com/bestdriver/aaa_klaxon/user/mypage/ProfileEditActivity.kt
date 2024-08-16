@@ -83,7 +83,7 @@ fun ProfileEditScreen(modifier: Modifier = Modifier) {
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(16.dp),
-            verticalArrangement = Arrangement.Top,
+            verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             CircleWithCross()
@@ -97,43 +97,45 @@ fun ProfileEditScreen(modifier: Modifier = Modifier) {
                 modifier = Modifier
                     .padding(top = 10.dp)
             )
+            Text(
+                text = "아이디(이메일)*",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color.Black, // 텍스트 색상
+                modifier = Modifier
+                    .fillMaxWidth() // 전체 너비를 사용하여 왼쪽 정렬
+                    .padding(top = 10.dp)
+                    .align(Alignment.Start) // 왼쪽 정렬
+            )
             // Input fields
             OutlinedTextField(
                 value = id,
                 onValueChange = { id = it },
-                label = { Text("아이디") },
+                label = { Text("cyber@duksung.ac.kr") },
                 modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
             )
 
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("비밀번호") },
-                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+            Text(
+                text = "닉네임*",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color.Black, // 텍스트 색상
+                modifier = Modifier
+                    .fillMaxWidth() // 전체 너비를 사용하여 왼쪽 정렬
+                    .padding(top = 10.dp)
+                    .align(Alignment.Start) // 왼쪽 정렬
             )
 
             OutlinedTextField(
                 value = nickname,
                 onValueChange = { nickname = it },
-                label = { Text("닉네임") },
+                label = { Text("닉네임을 입력해주세요.") },
                 modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
             )
 
-            OutlinedTextField(
-                value = carNumber,
-                onValueChange = { carNumber = it },
-                label = { Text("차번호") },
-                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
-            )
 
-            OutlinedTextField(
-                value = phone,
-                onValueChange = { phone = it },
-                label = { Text("휴대폰 번호") },
-                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
+            // Spacer to push the button to the bottom
+            Spacer(modifier = Modifier.weight(1f))
 
             // Submit button
             Button(
@@ -142,7 +144,8 @@ fun ProfileEditScreen(modifier: Modifier = Modifier) {
                 },
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
-                    .padding(top = 16.dp),
+                    .padding(top = 16.dp)
+                    .padding(bottom = 50.dp),
                 enabled = allFieldsFilled,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF321D87)
