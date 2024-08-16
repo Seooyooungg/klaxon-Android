@@ -4,7 +4,9 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,7 +23,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 
 class ProfileEditActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,7 +53,8 @@ fun ProfileEditScreen(modifier: Modifier = Modifier) {
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            TopAppBar(modifier = Modifier
+                        .padding(top = 15.dp),
                 title = {
                     Text(
                         "프로필 편집",
@@ -71,6 +76,7 @@ fun ProfileEditScreen(modifier: Modifier = Modifier) {
                 colors = TopAppBarDefaults.mediumTopAppBarColors(containerColor = Color.White)
             )
         }
+
     ) { paddingValues ->
         Column(
             modifier = modifier
@@ -80,6 +86,17 @@ fun ProfileEditScreen(modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            CircleWithCross()
+
+
+            Text(
+                text = "김덕우",
+                fontSize = 25.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color.Black, // 텍스트 색상
+                modifier = Modifier
+                    .padding(top = 10.dp)
+            )
             // Input fields
             OutlinedTextField(
                 value = id,
@@ -129,11 +146,57 @@ fun ProfileEditScreen(modifier: Modifier = Modifier) {
                 enabled = allFieldsFilled,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF321D87)
-                )
+                ),
+                shape = RoundedCornerShape(5.dp)
             ) {
                 Text("수정 완료", fontSize = 20.sp, color = Color.White)
             }
         }
+    }
+}
+
+@Composable
+fun CircleWithCross(
+    modifier: Modifier = Modifier,
+    circleColor: Color = Color.Gray.copy(alpha = 0.4f),
+    crossColor: Color = Color.White,
+    crossStrokeWidth: Dp = 7.dp
+) {
+    Canvas(
+        modifier = modifier.size(100.dp) // Canvas의 크기 지정
+    ) {
+        // Canvas의 크기
+        val canvasSize = size
+
+        // 원의 반지름과 중심
+        val radius = canvasSize.minDimension / 2
+        val center = Offset(canvasSize.width / 2, canvasSize.height / 2)
+
+        // 원 그리기
+        drawCircle(
+            color = circleColor,
+            radius = radius,
+            center = center
+        )
+
+        // 십자가의 두께를 픽셀 단위로 변환
+        val strokeWidthPx = crossStrokeWidth.toPx()
+
+        val crossLength = radius / 2.3f
+
+        // 십자가 그리기
+        drawLine(
+            color = crossColor,
+            start = Offset(center.x - crossLength, center.y), // 수평선의 시작점
+            end = Offset(center.x + crossLength, center.y), // 수평선의 끝점
+            strokeWidth = strokeWidthPx
+        )
+        drawLine(
+            color = crossColor,
+            start = Offset(center.x, center.y - crossLength), // 수직선의 시작점
+            end = Offset(center.x, center.y + crossLength), // 수직선의 끝점
+            strokeWidth = strokeWidthPx
+        )
     }
 }
 
