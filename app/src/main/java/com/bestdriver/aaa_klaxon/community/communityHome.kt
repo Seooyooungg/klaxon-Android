@@ -12,7 +12,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Person
@@ -28,27 +30,35 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.room.util.copy
+import com.bestdriver.aaa_klaxon.R
 import com.bestdriver.aaa_klaxon.ui.theme.AAA_klaxonTheme
 
 
 @Composable
 fun CommunityScreen() {
+
+    val scrollState = rememberScrollState()
+
     Column(
         modifier = Modifier
             .padding(16.dp)
             .padding(top = 40.dp)
             .fillMaxWidth()
             .fillMaxHeight()
+            .verticalScroll(scrollState)
     ) {
         Text(
             text = "커뮤니티",
             fontSize = 32.sp,
-            fontWeight = FontWeight.ExtraBold,
+            fontFamily = FontFamily(Font(R.font.pretendard_extrabold)),
             modifier = Modifier
                 .fillMaxWidth()
                 .wrapContentWidth(Alignment.CenterHorizontally)
@@ -59,7 +69,7 @@ fun CommunityScreen() {
         Text(
             text = "인기 글",
             fontSize = 25.sp,
-            fontWeight = FontWeight.Bold,
+            fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.Start)
@@ -70,7 +80,7 @@ fun CommunityScreen() {
         Text(
             text = "덕성여대 정문쪽에 무슨 문제 있나요?",
             fontSize = 20.sp,
-            fontWeight = FontWeight.SemiBold,
+            fontFamily = FontFamily(Font(R.font.pretendard_medium)),
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.Start)
@@ -79,9 +89,11 @@ fun CommunityScreen() {
         )
 
         Text(
-            text = "아니 오늘 낮에 거기서 자동차가 잘못...",
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            text = "아니 오늘 낮에 거기서 자동차가 잘못 움직였는데 왜 이러는걸까요",
             fontSize = 16.sp,
-            fontWeight = FontWeight.Medium,
+            fontFamily = FontFamily(Font(R.font.pretendard_regular)),
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.Start)
@@ -106,7 +118,7 @@ fun CommunityScreen() {
             Text(
                 text = "7",
                 fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
+                fontFamily = FontFamily(Font(R.font.pretendard_regular)),
                 color = Color.Black,
                 modifier = Modifier.padding(end = 5.dp) // 숫자 7과 말풍선 아이콘 사이의 간격 설정
             )
@@ -122,7 +134,7 @@ fun CommunityScreen() {
             Text(
                 text = "2",
                 fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
+                fontFamily = FontFamily(Font(R.font.pretendard_regular)),
                 color = Color.Black,
                 modifier = Modifier
                     .padding(end = 10.dp)
@@ -133,7 +145,7 @@ fun CommunityScreen() {
             Text(
                 text = "08/02",
                 fontSize = 16.sp,
-                fontWeight = FontWeight.Normal,
+                fontFamily = FontFamily(Font(R.font.pretendard_regular)),
                 color = Color.Black.copy(alpha = 0.5f), // 50% 투명도 적용
                 modifier = Modifier
                     .padding(start = 10.dp)
@@ -145,7 +157,7 @@ fun CommunityScreen() {
         Text(
             text = "카니발 쓰는 사람",
             fontSize = 20.sp,
-            fontWeight = FontWeight.SemiBold,
+            fontFamily = FontFamily(Font(R.font.pretendard_medium)),
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.Start)
@@ -156,7 +168,7 @@ fun CommunityScreen() {
         Text(
             text = "저만 이런가요",
             fontSize = 16.sp,
-            fontWeight = FontWeight.Medium,
+            fontFamily = FontFamily(Font(R.font.pretendard_regular)),
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.Start)
@@ -181,7 +193,7 @@ fun CommunityScreen() {
             Text(
                 text = "35",
                 fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
+                fontFamily = FontFamily(Font(R.font.pretendard_regular)),
                 color = Color.Black,
                 modifier = Modifier.padding(end = 5.dp) // 숫자 7과 말풍선 아이콘 사이의 간격 설정
             )
@@ -197,7 +209,7 @@ fun CommunityScreen() {
             Text(
                 text = "10",
                 fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
+                fontFamily = FontFamily(Font(R.font.pretendard_regular)),
                 color = Color.Black,
                 modifier = Modifier
                     .padding(end = 10.dp)
@@ -208,7 +220,7 @@ fun CommunityScreen() {
             Text(
                 text = "08/02",
                 fontSize = 16.sp,
-                fontWeight = FontWeight.Normal,
+                fontFamily = FontFamily(Font(R.font.pretendard_regular)),
                 color = Color.Black.copy(alpha = 0.5f), // 50% 투명도 적용
                 modifier = Modifier
                     .padding(start = 10.dp)
@@ -247,7 +259,7 @@ fun PopularCard() {
                 Text(
                     text = "카니발 쓰는 사람",
                     fontSize = 22.sp,
-                    fontWeight = FontWeight.SemiBold,
+                    fontFamily = FontFamily(Font(R.font.pretendard_medium)),
                     color = Color.Black,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -257,7 +269,7 @@ fun PopularCard() {
                 Text(
                     text = "저만 이런가요",
                     fontSize = 18.sp,
-                    fontWeight = FontWeight.Medium,
+                    fontFamily = FontFamily(Font(R.font.pretendard_regular)),
                     color = Color.Black,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -284,7 +296,7 @@ fun PopularCard() {
                     Text(
                         text = "35",
                         fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily(Font(R.font.pretendard_regular)),
                         color = Color.Black
                     )
                 }
@@ -306,7 +318,7 @@ fun PopularCard() {
                     Text(
                         text = "10",
                         fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily(Font(R.font.pretendard_regular)),
                         color = Color.Black
                     )
                 }
