@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
@@ -17,6 +18,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.Divider
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import com.bestdriver.aaa_klaxon.R
 
 @Composable
 fun Title() {
@@ -30,8 +35,8 @@ fun Title() {
     ) {
         Text(
             text = "적립내역",
-            fontSize = 40.sp,
-            fontWeight = FontWeight.Bold
+            fontSize = 32.sp,
+            fontFamily = FontFamily(Font(R.font.pretendard_extrabold)),
         )
     }
 }
@@ -55,31 +60,75 @@ fun CashDetails() {
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.Start
             ) {
-                Text(text = "내캐시", fontSize = 15.sp, fontWeight = FontWeight.Thin)
+                Text(
+                    text = "내캐시",
+                    fontSize = 15.sp,
+                    fontFamily = FontFamily(Font(R.font.pretendard_regular)),
+                )
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = "10,300", fontSize = 30.sp, fontWeight = FontWeight.Bold)
-                    Text(text = "원", fontSize = 20.sp, modifier = Modifier.padding(start = 4.dp))
+                    Text(
+                        text = "10,300",
+                        fontSize = 35.sp,
+                        fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
+                    )
+                    Text(
+                        text = "원",
+                        fontSize = 20.sp,
+                        fontFamily = FontFamily(Font(R.font.pretendard_regular)),
+                        modifier = Modifier
+                            .padding(start = 4.dp)
+                    )
                 }
             }
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Button(
-                    onClick = { /* Handle 적립하기 클릭 */ },
-                    modifier = Modifier.width(90.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0XFFF2E3E2))
+                    onClick = { /* Handle 새로고침 클릭 */ },
+                    modifier = Modifier
+                        .width(85.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0XFFF2E3E2)),
+                    elevation = ButtonDefaults.elevatedButtonElevation(
+                        defaultElevation = 5.dp,
+                        pressedElevation = 0.dp,
+                        disabledElevation = 0.dp
+                    ),
+                    enabled = true,
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(2.dp)
                 ) {
-                    Text(text = "적립하기", color = Color.Black, fontSize = 11.sp)
+                    Text(
+                        text = "새로고침",
+                        color = Color.Black,
+                        fontSize = 15.sp,
+                        fontFamily = FontFamily(Font(R.font.pretendard_medium)),
+
+                    )
                 }
+
                 Button(
                     onClick = { /* Handle 사용하기 클릭 */ },
-                    modifier = Modifier.width(90.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0XFFE8EEFB))
+                    modifier = Modifier
+                        .width(85.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0XFFE8EEFB)),
+                    elevation = ButtonDefaults.elevatedButtonElevation(
+                        defaultElevation = 5.dp,
+                        pressedElevation = 0.dp,
+                        disabledElevation = 0.dp
+                    ),
+                    enabled = true,
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(2.dp)
                 ) {
-                    Text(text = "사용하기", color = Color.Black, fontSize = 11.sp)
+                    Text(
+                        text = "사용하기",
+                        color = Color.Black,
+                        fontSize = 15.sp,
+                        fontFamily = FontFamily(Font(R.font.pretendard_medium)),
+                    )
                 }
             }
         }
@@ -120,7 +169,7 @@ fun CashHistory() {
                 Column {
                     Text(
                         text = date,
-                        fontSize = 20.sp,
+                        fontSize = 23.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(vertical = 16.dp)
                     )
@@ -149,7 +198,7 @@ fun CashHistory() {
                             Text(text = day, fontSize = 13.sp)
                             Text(
                                 text = amount,
-                                fontSize = 16.sp,
+                                fontSize = 18.sp,
                                 color = if (isCredit) Color.Red else Color.Blue
                             )
                         }
@@ -179,8 +228,7 @@ fun CashHistory() {
 fun PreviewCashview() {
     Column(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
+            .fillMaxSize(),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
