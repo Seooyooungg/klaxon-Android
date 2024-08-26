@@ -13,11 +13,22 @@ import androidx.compose.ui.unit.sp
 import com.bestdriver.aaa_klaxon.ui.theme.AAA_klaxonTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.bestdriver.aaa_klaxon.R
+import com.bestdriver.aaa_klaxon.ui.theme.MyPurple
 
 @Composable
-fun SignUpScreen(modifier: Modifier = Modifier, onSignUpComplete: () -> Unit) {
+fun SignUpScreen(
+    navController: NavController,
+    modifier: Modifier = Modifier
+) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var nickname by remember { mutableStateOf("") }
@@ -37,30 +48,32 @@ fun SignUpScreen(modifier: Modifier = Modifier, onSignUpComplete: () -> Unit) {
         verticalArrangement = Arrangement.Top
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 40.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = { onSignUpComplete() }) {
+            IconButton(onClick = { navController.popBackStack() }) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    imageVector = Icons.Filled.ArrowBack,
                     contentDescription = "뒤로가기"
                 )
             }
-            Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = "회원가입",
                 fontSize = 40.sp,
-                color = Color(0xFF321D87),
-                fontWeight = FontWeight.Bold,
+                color = MyPurple,
+                fontFamily = FontFamily(Font(R.font.pretendard_extrabold)),
                 textAlign = TextAlign.Center,
                 modifier = Modifier.weight(1f)
             )
         }
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
+            singleLine = true,
             label = { Text("아이디 (이메일)", fontSize = 20.sp) },
             modifier = Modifier
                 .fillMaxWidth()
@@ -69,14 +82,17 @@ fun SignUpScreen(modifier: Modifier = Modifier, onSignUpComplete: () -> Unit) {
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
+            singleLine = true,
             label = { Text("비밀번호", fontSize = 20.sp) },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp)
+                .padding(vertical = 8.dp),
+            visualTransformation = PasswordVisualTransformation()
         )
         OutlinedTextField(
             value = nickname,
             onValueChange = { nickname = it },
+            singleLine = true,
             label = { Text("닉네임", fontSize = 20.sp) },
             modifier = Modifier
                 .fillMaxWidth()
@@ -85,6 +101,7 @@ fun SignUpScreen(modifier: Modifier = Modifier, onSignUpComplete: () -> Unit) {
         OutlinedTextField(
             value = carNumber,
             onValueChange = { carNumber = it },
+            singleLine = true,
             label = { Text("차번호", fontSize = 20.sp) },
             modifier = Modifier
                 .fillMaxWidth()
@@ -93,35 +110,47 @@ fun SignUpScreen(modifier: Modifier = Modifier, onSignUpComplete: () -> Unit) {
         OutlinedTextField(
             value = phone,
             onValueChange = { phone = it },
+            singleLine = true,
             label = { Text("휴대폰", fontSize = 20.sp) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp)
         )
+
         Spacer(modifier = Modifier.height(16.dp))
+
         Button(
-            onClick = { showDialog = true },
+            onClick = {
+                if (isFormValid) {
+                    // 회원가입 완료 후 로그인 화면으로 돌아가기
+                    navController.popBackStack() // 이전 화면으로 돌아가기
+                } else {
+                    // 폼이 유효하지 않은 경우
+                    showDialog = true
+                }
+            },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp),
+                .padding(vertical = 8.dp)
+                .height(56.dp), // 버튼의 높이 설정
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF321D87) // 배경색 설정
-            ),
-            enabled = isFormValid // 모든 필드가 채워졌을 때만 활성화
+                containerColor = MyPurple
+            )
         ) {
-            Text("완료", fontSize = 20.sp, color = Color.White) // 텍스트 색상
+            Text("회원가입",
+                fontSize = 20.sp,
+                fontFamily = FontFamily(Font(R.font.pretendard_medium)),
+                color = Color.White
+            )
         }
 
         if (showDialog) {
             AlertDialog(
                 onDismissRequest = { showDialog = false },
-                title = { Text("회원가입 완료") },
-                text = { Text("이제 클락션에서 실시간 오분류 정보를 확인할 수 있어요!") },
+                title = { Text("폼 검증 오류") },
+                text = { Text("모든 필드를 올바르게 입력해 주세요.") },
                 confirmButton = {
-                    TextButton(onClick = {
-                        onSignUpComplete()
-                        showDialog = false
-                    }) {
+                    Button(onClick = { showDialog = false }) {
                         Text("확인")
                     }
                 }
@@ -135,7 +164,7 @@ fun SignUpScreen(modifier: Modifier = Modifier, onSignUpComplete: () -> Unit) {
 fun PreviewSignUpScreen() {
     AAA_klaxonTheme {
         SignUpScreen(
-            onSignUpComplete = {}
+            navController = rememberNavController()
         )
     }
 }

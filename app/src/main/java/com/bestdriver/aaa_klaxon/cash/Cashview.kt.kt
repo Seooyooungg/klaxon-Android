@@ -1,10 +1,13 @@
 package com.bestdriver.aaa_klaxon.cash
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
@@ -17,27 +20,75 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextAlign
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.bestdriver.aaa_klaxon.R
-
 @Composable
-fun Title() {
+fun CashScreen(navController: NavController) {
     Column(
         modifier = Modifier
+            .fillMaxSize()
             .padding(16.dp)
-            .padding(top = 40.dp)
-            .fillMaxWidth(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = "적립내역",
-            fontSize = 32.sp,
-            fontFamily = FontFamily(Font(R.font.pretendard_extrabold)),
-        )
+        // 상단 바
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 40.dp)
+                .height(56.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+
+            // 제목 텍스트
+           Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp), // Row의 높이에 맞추기
+               verticalAlignment = Alignment.CenterVertically
+            ) {
+               // 뒤로가기 아이콘
+               Icon(
+                   imageVector = Icons.Default.ArrowBack,
+                   contentDescription = "Back",
+                   modifier = Modifier
+                       .size(40.dp)
+                       .clickable { navController.navigateUp() }, // 뒤로가기 클릭 시 이전 페이지로 이동
+                   tint = Color.Black
+               )
+
+                Text(
+                    text = "적립내역",
+                    fontSize = 32.sp,
+                    fontFamily = FontFamily(Font(R.font.pretendard_extrabold)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 90.dp)
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // 나머지 콘텐츠
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 16.dp)
+        ) {
+            CashDetails()
+            Spacer(modifier = Modifier.height(16.dp))
+            CashHistory()
+        }
     }
 }
 
@@ -45,8 +96,7 @@ fun Title() {
 fun CashDetails() {
     Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
+            .fillMaxWidth(),
         verticalArrangement = Arrangement.Center
     ) {
         Row(
@@ -65,8 +115,9 @@ fun CashDetails() {
                     fontSize = 15.sp,
                     fontFamily = FontFamily(Font(R.font.pretendard_regular)),
                 )
+                Spacer(modifier = Modifier.height(3.dp))
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.Bottom,) {
                     Text(
                         text = "10,300",
                         fontSize = 35.sp,
@@ -78,6 +129,7 @@ fun CashDetails() {
                         fontFamily = FontFamily(Font(R.font.pretendard_regular)),
                         modifier = Modifier
                             .padding(start = 4.dp)
+                            .padding(bottom = 5.dp)
                     )
                 }
             }
@@ -106,7 +158,7 @@ fun CashDetails() {
                         fontSize = 15.sp,
                         fontFamily = FontFamily(Font(R.font.pretendard_medium)),
 
-                    )
+                        )
                 }
 
                 Button(
@@ -149,7 +201,6 @@ fun CashHistory() {
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
     ) {
         // 날짜별 캐시 내역을 그룹화하기 위한 예시 데이터
         val cashHistoryData = mapOf(
@@ -169,12 +220,12 @@ fun CashHistory() {
                 Column {
                     Text(
                         text = date,
-                        fontSize = 23.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(vertical = 16.dp)
+                        fontSize = 25.sp,
+                        fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
+                        modifier = Modifier.padding(vertical = 14.dp)
                     )
                     HorizontalDivider(
-                        modifier = Modifier.padding(vertical = 16.dp),
+                        modifier = Modifier.padding(vertical = 14.dp),
                         thickness = 1.dp,
                         color = Color.LightGray
                     )
@@ -186,7 +237,7 @@ fun CashHistory() {
                     Row(
                         Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 16.dp),
+                            .padding(vertical = 14.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -196,15 +247,18 @@ fun CashHistory() {
                             horizontalAlignment = Alignment.Start
                         ) {
                             Text(text = day, fontSize = 13.sp)
+                            Spacer(modifier = Modifier.height(3.dp))
                             Text(
                                 text = amount,
                                 fontSize = 18.sp,
+                                fontFamily = FontFamily(Font(R.font.pretendard_regular)),
                                 color = if (isCredit) Color.Red else Color.Blue
                             )
                         }
 
                         Text(
                             text = if (isCredit) "적립" else "사용",
+                            fontFamily = FontFamily(Font(R.font.pretendard_regular)),
                             fontSize = 13.sp,
                             color = if (isCredit) Color.Red else Color.Blue
                         )
@@ -225,19 +279,7 @@ fun CashHistory() {
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewCashview() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize(),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Title()
-        Spacer(modifier = Modifier.height(16.dp))
-        CashDetails()
-        Spacer(modifier = Modifier.height(16.dp))
-        CashHistory()
-
-
-    }
+fun PreviewCashScreen() {
+    val navController = rememberNavController() // Preview용 NavController
+    CashScreen(navController = navController)
 }
