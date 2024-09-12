@@ -13,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -75,9 +76,24 @@ fun MyPageScreen(navController: NavController, modifier: Modifier = Modifier) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Box(
+                    modifier = Modifier
+                        .size(95.dp)
+                        .clip(RoundedCornerShape(50.dp))
+                        .background(Color.Gray),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("Profile", color = Color.White)
+                }
+
+                Column (
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 30.dp), // 전체 너비를 사용
+                    horizontalAlignment = Alignment.Start // 전체 열을 왼쪽으로 정렬
+                ) {
                     Text(
-                        text = "이름: $userName",
+                        text = "$userName",
                         fontSize = 23.sp,
                         fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
                         color = Color.Black,
@@ -85,20 +101,11 @@ fun MyPageScreen(navController: NavController, modifier: Modifier = Modifier) {
                             .padding(bottom = 16.dp),
                     )
                     Text(
-                        text = "차번호: $carNumber",
+                        text = "$carNumber",
                         fontSize = 18.sp,
                         fontFamily = FontFamily(Font(R.font.pretendard_medium)),
                         color = Color.Black
                     )
-                }
-
-                Box(
-                    modifier = Modifier
-                        .size(100.dp)
-                        .background(Color.Gray),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("Profile", color = Color.White)
                 }
             }
         }
