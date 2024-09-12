@@ -4,7 +4,10 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,22 +24,17 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 
-class ProfileEditActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            AAA_klaxonTheme {
-                ProfileEditScreen()
-            }
-        }
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileEditScreen(modifier: Modifier = Modifier) {
+fun ProfileEditScreen(navController: NavController, modifier: Modifier = Modifier) {
     var id by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var nickname by remember { mutableStateOf("") }
@@ -46,24 +44,24 @@ fun ProfileEditScreen(modifier: Modifier = Modifier) {
     val allFieldsFilled = id.isNotEmpty() && password.isNotEmpty() && nickname.isNotEmpty() && carNumber.isNotEmpty() && phone.isNotEmpty()
 
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
 
     Scaffold(
         topBar = {
             TopAppBar(
+                modifier = Modifier.padding(top = 40.dp),
                 title = {
                     Text(
                         "프로필 편집",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 25.sp,
+                        fontSize = 30.sp,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = {
-                        // 뒤로가기 버튼 클릭 시 마이페이지로 이동
-                        val intent = Intent(context, MyPageActivity::class.java)
-                        context.startActivity(intent)
+                        navController.navigateUp() // 이전 화면으로 돌아가기
                     }) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
                     }
@@ -76,60 +74,81 @@ fun ProfileEditScreen(modifier: Modifier = Modifier) {
             modifier = modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Top,
+                .padding(16.dp)
+                .clickable {
+                    // 빈 배경 클릭 시 키보드 숨기기
+                    focusManager.clearFocus()
+                },
+            verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Input fields
+            // CircleWithCross 컴포저블
+            CircleWithCross(modifier = Modifier.clickable {
+                // 동그라미 클릭 시 갤러리 열기
+                val intent = Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+                context.startActivity(intent)
+            })
+
+            Text(
+                text = "김덕우",
+                fontSize = 25.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color.Black,
+                modifier = Modifier.padding(top = 10.dp)
+            )
+
+            Text(
+                text = "아이디(이메일)*",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color.Black,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp)
+                    .padding(bottom = 5.dp)
+                    .align(Alignment.Start)
+            )
+
+            // 입력 필드
             OutlinedTextField(
                 value = id,
                 onValueChange = { id = it },
-                label = { Text("아이디") },
                 modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
             )
 
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("비밀번호") },
-                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+            Text(
+                text = "닉네임*",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color.Black,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp)
+                    .padding(bottom = 5.dp)
+                    .align(Alignment.Start)
             )
 
             OutlinedTextField(
                 value = nickname,
                 onValueChange = { nickname = it },
-                label = { Text("닉네임") },
                 modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
             )
 
-            OutlinedTextField(
-                value = carNumber,
-                onValueChange = { carNumber = it },
-                label = { Text("차번호") },
-                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
-            )
+            Spacer(modifier = Modifier.weight(1f))
 
-            OutlinedTextField(
-                value = phone,
-                onValueChange = { phone = it },
-                label = { Text("휴대폰 번호") },
-                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Submit button
             Button(
                 onClick = {
                     // TODO: 프로필 수정 로직 추가
                 },
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
-                    .padding(top = 16.dp),
+                    .padding(top = 16.dp)
+                    .padding(bottom = 50.dp),
                 enabled = allFieldsFilled,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF321D87)
-                )
+                ),
+                shape = RoundedCornerShape(5.dp)
             ) {
                 Text("수정 완료", fontSize = 20.sp, color = Color.White)
             }
@@ -137,10 +156,48 @@ fun ProfileEditScreen(modifier: Modifier = Modifier) {
     }
 }
 
+@Composable
+fun CircleWithCross(
+    modifier: Modifier = Modifier,
+    circleColor: Color = Color.Gray.copy(alpha = 0.4f),
+    crossColor: Color = Color.White,
+    crossStrokeWidth: Dp = 7.dp
+) {
+    Canvas(
+        modifier = modifier.size(100.dp)
+    ) {
+        val canvasSize = size
+        val radius = canvasSize.minDimension / 2
+        val center = Offset(canvasSize.width / 2, canvasSize.height / 2)
+
+        drawCircle(
+            color = circleColor,
+            radius = radius,
+            center = center
+        )
+
+        val strokeWidthPx = crossStrokeWidth.toPx()
+        val crossLength = radius / 2.3f
+
+        drawLine(
+            color = crossColor,
+            start = Offset(center.x - crossLength, center.y),
+            end = Offset(center.x + crossLength, center.y),
+            strokeWidth = strokeWidthPx
+        )
+        drawLine(
+            color = crossColor,
+            start = Offset(center.x, center.y - crossLength),
+            end = Offset(center.x, center.y + crossLength),
+            strokeWidth = strokeWidthPx
+        )
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun PreviewProfileEditScreen() {
     AAA_klaxonTheme {
-        ProfileEditScreen()
+        ProfileEditScreen(navController = rememberNavController())
     }
 }

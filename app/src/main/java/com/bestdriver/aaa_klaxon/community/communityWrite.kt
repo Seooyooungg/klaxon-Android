@@ -1,99 +1,267 @@
-﻿import androidx.compose.foundation.layout.Arrangement
+﻿import android.util.Log
+import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.bestdriver.aaa_klaxon.R
+import com.bestdriver.aaa_klaxon.ui.theme.MyPurple
+import com.bestdriver.aaa_klaxon.viewmodel.CommunityWriteScreenViewModel
+import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
+import java.util.Calendar
+import java.util.Locale
+import java.util.UUID
+
+data class Post(
+    val id: String = UUID.randomUUID().toString(), // 각 게시글에 고유 ID 추가
+    val title: String,
+    val body: String,
+    val userName: String,
+    val timestamp: String,
+    var likeCount: Int, // 추가된 부분
+    val commentCount: Int // 댓글 수를 추가
+)
 
 @Composable
-fun CommunityWriteScreen() {
-    Column(
+fun CommunityWriteScreen(
+    navController: NavController,
+    viewModel: CommunityWriteScreenViewModel,
+    userName: String,
+    onSubmitClick: (title: String, body: String, timestamp: String) -> String // ID를 반환하는 함수
+) {
+    val titleState = remember { mutableStateOf("") }
+    val textState = remember { mutableStateOf("") }
+
+    val maxLength = 500
+    val titleMaxLength = 100
+
+    val isSubmitEnabled = remember(titleState.value, textState.value) {
+        titleState.value.isNotBlank() && textState.value.isNotBlank() && textState.value.length <= maxLength
+    }
+
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    Box(
         modifier = Modifier
-            .padding(16.dp)
-            .padding(top = 40.dp)
-            .fillMaxWidth()
-            .fillMaxHeight()
+            .fillMaxSize()
+            .background(Color.White)
+            .clickable {
+                keyboardController?.hide()
+            }
     ) {
-        Row(
+        Column(
             modifier = Modifier
-                .fillMaxWidth(), // 좌우 여백 추가
-            horizontalArrangement = Arrangement.SpaceBetween // 왼쪽, 가운데, 오른쪽 정렬
+                .padding(16.dp)
+                .fillMaxSize()
         ) {
-            // 왼쪽에 "취소" 텍스트 추가
-            Text(
-                text = "취소",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Normal,
-                modifier = Modifier.align(Alignment.CenterVertically) // 수직 가운데 정렬
-            )
-
-            // 가운데에 "글쓰기" 텍스트 추가
-            Text(
-                text = "글쓰기",
-                fontSize = 35.sp, // 큰 글씨
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center, // 텍스트 가운데 정렬
+            Row(
                 modifier = Modifier
-                    .align(Alignment.CenterVertically) // 수직 가운데 정렬
-            )
+                    .fillMaxWidth()
+                    .padding(top = 40.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "취소",
+                    fontSize = 20.sp,
+                    fontFamily = FontFamily(Font(R.font.pretendard_regular)),
+                    modifier = Modifier
+                        .align(Alignment.CenterVertically)
+                        .clickable {
+                            navController.navigate("communityHome") {
+                                popUpTo("communityWrite") { inclusive = true }
+                            }
+                        }
+                )
 
-            // 오른쪽에 "등록" 텍스트 추가
-            Text(
-                text = "등록",
-                fontSize = 20.sp, // 조그만한 글씨
-                fontWeight = FontWeight.Normal,
-                modifier = Modifier.align(Alignment.CenterVertically) // 수직 가운데 정렬
-            )
-        }
+                Text(
+                    text = "글쓰기",
+                    fontSize = 32.sp,
+                    fontFamily = FontFamily(Font(R.font.pretendard_extrabold)),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .align(Alignment.CenterVertically)
+                )
 
-        Text(
-            text = "다른 사용자들과 여러 정보를 공유해 보세요.",
-            fontSize = 18.sp,
-            color = Color.Black.copy(alpha = 0.5f),
-            fontWeight = FontWeight.Normal,
-            modifier = Modifier
-                .padding(top = 35.dp)
-        )
+                Text(
+                    text = "등록",
+                    fontSize = 20.sp,
+                    fontFamily = FontFamily(Font(R.font.pretendard_regular)),
+                    modifier = Modifier
+                        .align(Alignment.CenterVertically)
+                        .clickable {
+                            if (isSubmitEnabled) {
+                                val currentTime = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(
+                                    Calendar.getInstance().time
+                                )
+                                // 새로운 글을 등록하고 글의 ID를 반환받습니다
+                                val newPostId = onSubmitClick(
+                                    titleState.value,
+                                    textState.value,
+                                    currentTime
+                                )
+                                navController.navigate("communityHome?newPostId=$newPostId") {
+                                    popUpTo("communityWrite") { inclusive = true }
+                                }
+                            }
+                        }
+                )
+            }
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize() // Box가 화면 전체를 채우게 설정
-                .padding(16.dp) // Box 안쪽에 여백 추가
-        ) {
-            Text(
-                text = "0/500",
-                fontSize = 18.sp, // 텍스트 크기 설정
-                color = Color.Black.copy(alpha = 0.5f),
-                fontWeight = FontWeight.Normal, // 텍스트 두께 설정
+            Spacer(modifier = Modifier.height(16.dp))
+
+            TextField(
+                value = titleState.value,
+                onValueChange = { newTitle ->
+                    if (newTitle.length <= titleMaxLength) {
+                        titleState.value = newTitle
+                    }
+                },
+                placeholder = {
+                    Text(
+                        text = "제목",
+                        fontSize = 20.sp,
+                        fontFamily = FontFamily(Font(R.font.pretendard_semibold))
+                    )
+                },
                 modifier = Modifier
-                    .align(Alignment.BottomEnd) // Box의 오른쪽 하단에 정렬
-                    .padding(16.dp) // 텍스트 주위에 여백 추가
+                    .fillMaxWidth()
+                    .padding(top = 16.dp)
+                    .background(Color.Transparent)
+                    .border(1.dp, Color.Gray.copy(alpha = 0.3f), RoundedCornerShape(8.dp)),
+                textStyle = TextStyle(
+                    fontSize = 20.sp,
+                    color = Color.Black,
+                    fontFamily = FontFamily(Font(R.font.pretendard_regular))
+                ),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White
+                )
             )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp)
+                    .border(1.dp, Color.Gray.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+            ) {
+                TextField(
+                    value = textState.value,
+                    onValueChange = { newText ->
+                        if (newText.length <= maxLength) {
+                            textState.value = newText
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth()
+                        .padding(top = 5.dp),
+                    textStyle = TextStyle(
+                        fontSize = 18.sp,
+                        color = Color.Black,
+                        fontFamily = FontFamily(Font(R.font.pretendard_regular))
+                    ),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent
+                    ),
+                    maxLines = Int.MAX_VALUE,
+                    singleLine = false,
+                    placeholder = {
+                        Text(
+                            text = "내용을 입력하세요...",
+                            fontSize = 18.sp,
+                            color = Color.Black.copy(alpha = 0.5f)
+                        )
+                    }
+                )
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = "${textState.value.length}/$maxLength",
+                        fontSize = 18.sp,
+                        color = Color.Black.copy(alpha = 0.5f),
+                        fontFamily = FontFamily(Font(R.font.pretendard_regular))
+                    )
+                }
+            }
         }
     }
 }
 
 
-@Preview(showBackground = true)
-@Composable
-fun PreviewCommunityWriteScreen() {
-    CommunityWriteScreen()
-}
+
+
+//@Preview(showBackground = true)
+//@Composable
+//fun PreviewCommunityWriteScreen() {
+//    val navController = rememberNavController()
+//    val posts = remember { mutableStateListOf<Post>() }
+//
+//    val viewModel = CommunityWriteScreenViewModel()
+//
+//    val handleSubmitClick: (String, String, String) -> Unit = { title, body, timestamp ->
+//        viewModel.addPost(title, body, "testUser", timestamp)
+//        navController.navigate("community_screen") {
+//            popUpTo("community_write_screen") { inclusive = true }
+//        }
+//    }
+//
+//    CommunityWriteScreen(
+//        navController = navController,
+//        viewModel = viewModel,
+//        userName = "testUser", // 예제 사용자 이름
+//        onSubmitClick = handleSubmitClick
+//    )
+//}
