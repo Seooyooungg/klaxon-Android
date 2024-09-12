@@ -54,6 +54,7 @@ fun TitleCard(navController: NavController) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
+            .padding(top = 15.dp)
     ) {
         // 상단 아이콘과 텍스트
         Row(

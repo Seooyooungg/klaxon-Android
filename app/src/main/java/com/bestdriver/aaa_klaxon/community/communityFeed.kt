@@ -176,19 +176,19 @@ fun PostItem(post: Post, viewModel: CommunityWriteScreenViewModel) {
         ) {
             Text(
                 text = post.userName,
-                fontSize = 28.sp,
+                fontSize = 25.sp,
                 fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
                 color = Color.Black,
                 modifier = Modifier
-                    .padding(bottom = 6.dp)
-            )
+                    .padding(bottom = 5.dp)
+ )
 
             Row {
                 Text(
                     text = post.timestamp.split(" ")[0], // 날짜
-                    fontSize = 18.sp,
+                    fontSize = 17.sp,
                     fontFamily = FontFamily(Font(R.font.pretendard_regular)),
-                    color = Color.Black.copy(alpha = 0.5f),
+                    color = Color.Black.copy(alpha = 0.5f)
                 )
 //                Text(
 //                    text = post.timestamp.split(" ")[1], // 시간
