@@ -44,17 +44,37 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.bestdriver.aaa_klaxon.R
 import com.bestdriver.aaa_klaxon.ui.theme.MyPurple
+import com.bestdriver.aaa_klaxon.viewmodel.CommunityWriteScreenViewModel
+import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
+import java.util.Calendar
+import java.util.Locale
+import java.util.UUID
+
+data class Post(
+    val id: String = UUID.randomUUID().toString(), // 각 게시글에 고유 ID 추가
+    val title: String,
+    val body: String,
+    val userName: String,
+    val timestamp: String,
+    var likeCount: Int, // 추가된 부분
+    val commentCount: Int // 댓글 수를 추가
+)
 
 @Composable
 fun CommunityWriteScreen(
     navController: NavController,
-    onSubmitClick: (String, String) -> Unit
+    viewModel: CommunityWriteScreenViewModel,
+    userName: String,
+    onSubmitClick: (title: String, body: String, timestamp: String) -> String // ID를 반환하는 함수
 ) {
-    // 상태 변수 정의
     val titleState = remember { mutableStateOf("") }
     val textState = remember { mutableStateOf("") }
 
@@ -65,7 +85,6 @@ fun CommunityWriteScreen(
         titleState.value.isNotBlank() && textState.value.isNotBlank() && textState.value.length <= maxLength
     }
 
-    // 키보드 상태를 관리하는 상태
     val keyboardController = LocalSoftwareKeyboardController.current
 
     Box(
@@ -73,7 +92,6 @@ fun CommunityWriteScreen(
             .fillMaxSize()
             .background(Color.White)
             .clickable {
-                // 배경을 클릭하면 키보드를 숨깁니다
                 keyboardController?.hide()
             }
     ) {
@@ -82,7 +100,6 @@ fun CommunityWriteScreen(
                 .padding(16.dp)
                 .fillMaxSize()
         ) {
-            // 상단 Row
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -119,9 +136,17 @@ fun CommunityWriteScreen(
                         .align(Alignment.CenterVertically)
                         .clickable {
                             if (isSubmitEnabled) {
-                                onSubmitClick(titleState.value, textState.value)
-                                navController.navigate("community_screen") {
-                                    popUpTo("community_write_screen") { inclusive = true }
+                                val currentTime = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(
+                                    Calendar.getInstance().time
+                                )
+                                // 새로운 글을 등록하고 글의 ID를 반환받습니다
+                                val newPostId = onSubmitClick(
+                                    titleState.value,
+                                    textState.value,
+                                    currentTime
+                                )
+                                navController.navigate("communityHome?newPostId=$newPostId") {
+                                    popUpTo("communityWrite") { inclusive = true }
                                 }
                             }
                         }
@@ -130,7 +155,6 @@ fun CommunityWriteScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 제목 입력 필드
             TextField(
                 value = titleState.value,
                 onValueChange = { newTitle ->
@@ -157,18 +181,16 @@ fun CommunityWriteScreen(
                 ),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.White,
-                    unfocusedContainerColor = MyPurple.copy(alpha = 0.2f)
+                    unfocusedContainerColor = Color.White
                 )
             )
 
-            // 본문 입력 필드와 글자 수 카운터
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 16.dp)
                     .border(1.dp, Color.Gray.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
             ) {
-                // 본문 입력 필드
                 TextField(
                     value = textState.value,
                     onValueChange = { newText ->
@@ -177,7 +199,7 @@ fun CommunityWriteScreen(
                         }
                     },
                     modifier = Modifier
-                        .fillMaxHeight() // 텍스트 필드가 남은 공간을 꽉 차게 함
+                        .fillMaxHeight()
                         .fillMaxWidth()
                         .padding(top = 5.dp),
                     textStyle = TextStyle(
@@ -188,8 +210,8 @@ fun CommunityWriteScreen(
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.White,
                         unfocusedContainerColor = Color.White,
-                        focusedIndicatorColor = Color.Transparent, // 밑줄 제거
-                        unfocusedIndicatorColor = Color.Transparent // 밑줄 제거
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent
                     ),
                     maxLines = Int.MAX_VALUE,
                     singleLine = false,
@@ -201,7 +223,6 @@ fun CommunityWriteScreen(
                         )
                     }
                 )
-                // 글자 수 카운터를 텍스트 필드의 오른쪽 하단에 고정
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
@@ -219,30 +240,28 @@ fun CommunityWriteScreen(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun PreviewCommunityWriteScreen() {
-    val navController = rememberNavController()
 
-    // MutableStateList for testing
-    val posts = remember { mutableStateListOf<Pair<String, String>>() }
 
-    val handleSubmitClick: (String, String) -> Unit = { title, body ->
-        // List에 데이터 추가
-        posts.add(Pair(title, body))
 
-        // 데이터 제출 후 CommunityScreen으로 돌아가기
-        navController.navigate("community_screen") {
-            popUpTo("community_write_screen") { inclusive = true }
-        }
-    }
-
-    CommunityWriteScreen(
-        navController = navController,
-        onSubmitClick = { title, body ->
-            // 예제에서는 아무 동작도 하지 않지만, 실제로는 데이터를 처리하거나 로그를 찍을 수 있습니다.
-            // 실제 구현에서는 이 부분을 적절히 처리합니다.
-            Log.d("Preview", "제목: $title, 본문: $body")
-        }
-    )
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun PreviewCommunityWriteScreen() {
+//    val navController = rememberNavController()
+//    val posts = remember { mutableStateListOf<Post>() }
+//
+//    val viewModel = CommunityWriteScreenViewModel()
+//
+//    val handleSubmitClick: (String, String, String) -> Unit = { title, body, timestamp ->
+//        viewModel.addPost(title, body, "testUser", timestamp)
+//        navController.navigate("community_screen") {
+//            popUpTo("community_write_screen") { inclusive = true }
+//        }
+//    }
+//
+//    CommunityWriteScreen(
+//        navController = navController,
+//        viewModel = viewModel,
+//        userName = "testUser", // 예제 사용자 이름
+//        onSubmitClick = handleSubmitClick
+//    )
+//}

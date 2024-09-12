@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -27,48 +28,61 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.bestdriver.aaa_klaxon.R
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.text.style.TextAlign
+import androidx.lifecycle.LiveData
+import com.bestdriver.aaa_klaxon.viewmodel.NoticeViewModel
+import kotlin.reflect.KProperty
+
+
 
 @Composable
-fun NoticeLetterScreen(navController: NavController) {
-    Column(
-        modifier = Modifier
-            .padding(16.dp)
-            .padding(top = 20.dp)
-            .fillMaxWidth()
-            .fillMaxHeight()
-    ) {
+fun NoticeLetterScreen(navController: NavController, noticeId: String, viewModel: NoticeViewModel) {
+    // ViewModel에서 공지사항 리스트를 가져옵니다.
+    val notices by viewModel.notices.observeAsState(emptyList()) // LiveData를 observeAsState로 변경
 
-        Row(
+    // noticeId에 해당하는 공지사항을 찾습니다.
+    val notice = notices.find { it.id == noticeId }
+
+    // 공지사항이 존재할 때 UI를 구성합니다.
+    notice?.let {
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 20.dp)
-                .padding(bottom = 50.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(16.dp)
+                .fillMaxSize()
         ) {
-            Icon(
-                imageVector = Icons.Default.ArrowBack,
-                contentDescription = "Back",
-                modifier = Modifier
-                    .size(40.dp)
-                    .clickable { navController.navigateUp() }, // 뒤로가기 클릭 시 noticeHome으로 이동
-                tint = Color.Black
-            )
-            Text(
-                text = "공지사항",
-                fontSize = 30.sp,
-                fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
-                color = Color.Black,
+            // 상단의 뒤로가기 버튼과 제목을 표시하는 Row입니다.
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 90.dp)
-            )
-        }
+                    .padding(top = 20.dp, bottom = 50.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ArrowBack,
+                    contentDescription = "Back",
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clickable { navController.navigateUp() },
+                    tint = Color.Black
+                )
+                Text(
+                    text = "공지사항",
+                    fontSize = 30.sp,
+                    fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
+                    color = Color.Black,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 90.dp),
+                    textAlign = TextAlign.Center // 제목을 중앙 정렬
+                )
+            }
 
-        Column(
-            modifier = Modifier.weight(1f)
-        ) {
+            // 공지사항의 제목을 표시합니다.
             Text(
-                text = "[공지] 서울특별시 강북구 4.19로 표지판 업데이트",
+                text = it.title,
                 fontSize = 20.sp,
                 fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
                 color = Color.Black,
@@ -76,26 +90,24 @@ fun NoticeLetterScreen(navController: NavController) {
                     .fillMaxWidth()
                     .padding(bottom = 10.dp)
             )
+
+            // 공지사항의 날짜를 표시합니다.
             Text(
-                text = "2024.08.07",
+                text = it.date,
                 fontSize = 15.sp,
                 fontFamily = FontFamily(Font(R.font.pretendard_medium)),
-                color = Color.Black.copy(0.5f),
+                color = Color.Black.copy(alpha = 0.5f),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 25.dp)
             )
-            ThinHorizontalLine()
 
+            // 공지사항과 본문 사이의 선을 표시합니다.
+            ThinHorizontalLine() // 수정된 이름을 사용하세요. (여기서는 가정한 것임)
+
+            // 공지사항의 본문을 표시합니다.
             Text(
-                text = "안녕하세요, 기아자동차입니다." +
-                        "\n서울특별시 강북구 4.19로 우회전 표지판 확인 결과" +
-                        "\n표지판이 손상되어 오류가 발생하는 것으로 확인됐습니다." +
-                        "\n빠른 시일 내에 새로운 표지판으로 교체될 예정이오니" +
-                        "\n양해 부탁드립니다." +
-                        "\n\n문의 사항이 있으신 경우, 아래의 연락처로 문의 바랍니다." +
-                        "\n02-000-0000" +
-                        "\n\n감사합니다.",
+                text = it.body,
                 fontSize = 17.sp,
                 fontFamily = FontFamily(Font(R.font.pretendard_regular)),
                 color = Color.Black,
@@ -107,10 +119,14 @@ fun NoticeLetterScreen(navController: NavController) {
     }
 }
 
-
 @Preview(showBackground = true)
 @Composable
 fun PreviewNoticeLetterScreen() {
     val navController = rememberNavController()
-    NoticeLetterScreen(navController = navController)
+    val viewModel = NoticeViewModel() // 여기에 적절한 ViewModel 인스턴스를 제공하세요.
+    NoticeLetterScreen(
+        navController = navController,
+        noticeId = "1", // 여기에 적절한 noticeId를 제공하세요.
+        viewModel = viewModel
+    )
 }

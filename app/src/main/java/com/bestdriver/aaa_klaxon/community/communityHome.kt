@@ -1,3 +1,4 @@
+import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -29,6 +30,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -48,14 +54,43 @@ import androidx.room.util.copy
 import com.bestdriver.aaa_klaxon.R
 import com.bestdriver.aaa_klaxon.ui.theme.AAA_klaxonTheme
 import com.bestdriver.aaa_klaxon.ui.theme.MyPurple
+import com.bestdriver.aaa_klaxon.viewmodel.CommunityWriteScreenViewModel
 
 
 @Composable
-fun CommunityScreen(navController: NavController) {
-    val dataList = listOf(
-        CommunityItem("덕성여대 정문쪽에 무슨 문제 있나요?", "아니 오늘 낮에 거기서 자동차가 잘못 움직였는데 왜 이러는걸까요", "08/02", 7, 2),
-        CommunityItem("카니발 쓰는 사람", "저만 이런가요", "08/02", 35, 10)
-    )
+fun CommunityScreen(
+    navController: NavController,
+    viewModel: CommunityWriteScreenViewModel,
+    newPostId: String? = null // 새로 추가된 게시글 ID를 선택적으로 받을 수 있습니다
+) {
+    val posts by viewModel.posts.collectAsState() // StateFlow<List<Post>>를 List<Post>로 변환합니다
+    val mostLikedPost by remember { derivedStateOf { viewModel.getMostLikedPost() } }
+
+    // 새 게시글 ID가 변경될 때마다 네비게이션을 수행
+    LaunchedEffect(newPostId) {
+        newPostId?.let { postId ->
+            val post = posts.find { it.id == postId }
+            if (post != null) {
+                // 게시글 상세 페이지로 이동
+                navController.navigate("communityFeed/${post.id}/${post.title}/${post.body}/${post.timestamp}/${post.likeCount}/${post.userName}") {
+                    // 이 코드로 인해 CommunityScreen이 제거되고 CommunityFeed가 보여질 것입니다.
+                    popUpTo("communityHome") { inclusive = true }
+                }
+            }
+        }
+    }
+
+    // 네비게이션 효과를 추가합니다
+  //      LaunchedEffect(newPostId) {
+    //           newPostId?.let { postId ->
+    //          val post = posts.find { it.id == postId }
+    //          post?.let {
+    //              navController.navigate("communityFeed/${it.id}/${it.title}/${it.body}/${it.timestamp}/${it.likeCount}/${it.userName}") {
+    //                  popUpTo("communityScreen") { inclusive = true }
+    //              }
+    //          }
+    //      }
+    //  }
 
     Box(
         modifier = Modifier
@@ -89,16 +124,34 @@ fun CommunityScreen(navController: NavController) {
                 )
             }
 
-            item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp)
-                        .clickable {
-                            navController.navigate("communityFeed")
-                        }
-                ) {
-                    PopularCard()
+            if (mostLikedPost != null) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp)
+                            .clickable {
+                                navController.navigate("communityFeed/${mostLikedPost!!.id}/${mostLikedPost!!.title}/${mostLikedPost!!.body}/${mostLikedPost!!.timestamp}/${mostLikedPost!!.likeCount}/${mostLikedPost!!.userName}")
+                            }
+                    ) {
+                        PopularCard(
+                            title = mostLikedPost!!.title,
+                            content = mostLikedPost!!.body,
+                            date = mostLikedPost!!.timestamp,
+                            favoriteCount = mostLikedPost!!.likeCount,
+                            commentCount = mostLikedPost!!.commentCount
+                        )
+                    }
+                }
+            } else {
+                item {
+                    Text(
+                        text = "인기 글이 없습니다.",
+                        fontSize = 18.sp,
+                        fontFamily = FontFamily(Font(R.font.pretendard_medium)),
+                        color = Color.Black,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
 
@@ -106,26 +159,23 @@ fun CommunityScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(40.dp)) // PopularCard와 다음 항목 사이에 패딩 추가
             }
 
-            items(dataList) { item ->
+            items(posts) { post ->
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
-                            // 해당 아이템의 세부 페이지로 이동하는 로직
-                            // 예를 들어, item.title을 넘겨서 상세 페이지로 이동할 수 있습니다.
-                            navController.navigate("communityPostDetail/${item.title}")
+                            navController.navigate("communityFeed/${post.id}/${post.title}/${post.body}/${post.timestamp}/${post.likeCount}/${post.userName}")
                         }
                 ) {
                     CommunityPost(
-                        title = item.title,
-                        content = item.content,
-                        date = item.date,
-                        favoriteCount = item.favoriteCount,
-                        commentCount = item.commentCount
+                        title = post.title,
+                        content = post.body,
+                        date = post.timestamp,
+                        favoriteCount = post.likeCount,
+                        commentCount = post.commentCount
                     )
                 }
                 ThinHorizontalLine()
-
                 Spacer(modifier = Modifier.height(20.dp))
             }
 
@@ -148,7 +198,13 @@ fun CommunityScreen(navController: NavController) {
             }
         }
     }
+
 }
+
+
+
+
+
 
 @Composable
 fun CommunityPost(
@@ -232,7 +288,13 @@ fun CommunityPost(
 }
 
 @Composable
-fun PopularCard() {
+fun PopularCard(
+    title: String,
+    content: String,
+    date: String,
+    favoriteCount: Int,
+    commentCount: Int
+) {
     Card(
         shape = RoundedCornerShape(12.dp),
         modifier = Modifier
@@ -252,7 +314,7 @@ fun PopularCard() {
                 verticalArrangement = Arrangement.Center // 세로 가운데 정렬
             ) {
                 Text(
-                    text = "카니발 쓰는 사람",
+                    text = title,
                     fontSize = 23.sp,
                     fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
                     color = Color.Black,
@@ -262,7 +324,7 @@ fun PopularCard() {
                 )
 
                 Text(
-                    text = "저만 이런가요",
+                    text = content,
                     fontSize = 18.sp,
                     fontFamily = FontFamily(Font(R.font.pretendard_medium)),
                     color = Color.Black,
@@ -287,7 +349,7 @@ fun PopularCard() {
                     )
 
                     Text(
-                        text = "35",
+                        text = favoriteCount.toString(),
                         fontSize = 18.sp,
                         fontFamily = FontFamily(Font(R.font.pretendard_medium)),
                         color = Color.Black
@@ -309,7 +371,7 @@ fun PopularCard() {
                     )
 
                     Text(
-                        text = "10",
+                        text = commentCount.toString(),
                         fontSize = 18.sp,
                         fontFamily = FontFamily(Font(R.font.pretendard_medium)),
                         color = Color.Black
@@ -319,6 +381,7 @@ fun PopularCard() {
         }
     }
 }
+
 
 
 @Composable
@@ -389,8 +452,19 @@ data class CommunityItem(
     val commentCount: Int
 )
 
-@Preview(showBackground = true)
 @Composable
 fun PreviewCommunityScreen() {
-    CommunityScreen(navController = rememberNavController())
+    // Create a mock or test instance of the ViewModel
+    val mockViewModel = CommunityWriteScreenViewModel().apply {
+        // Initialize with some test data
+        val posts = listOf(
+            Post("wow","Test Post 1", "This is a test post", "User1", "2024-09-03T10:00:00Z", 10, 5),
+            Post("wow", "Test Post 2", "Another test post", "User2", "2024-09-03T11:00:00Z", 5, 2)
+        )
+    }
+
+    CommunityScreen(
+        navController = rememberNavController(),
+        viewModel = mockViewModel
+    )
 }

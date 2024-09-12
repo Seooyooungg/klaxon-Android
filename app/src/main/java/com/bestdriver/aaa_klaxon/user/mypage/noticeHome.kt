@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
@@ -17,6 +19,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,14 +30,28 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.bestdriver.aaa_klaxon.R
 import com.bestdriver.aaa_klaxon.community.CircleCanvas
 import com.bestdriver.aaa_klaxon.community.ThinHorizontalLine
+import com.bestdriver.aaa_klaxon.viewmodel.NoticeViewModel
+
+data class Notice(
+    val id: String,
+    val title: String,
+    val date: String,
+    val body: String
+)
+
 
 @Composable
-fun NoticeHomeScreen(navController: NavController) {
+fun NoticeHomeScreen(navController: NavController, viewModel: NoticeViewModel) {
+    val notices by viewModel.notices.observeAsState(emptyList())
+
     Column(
         modifier = Modifier
             .padding(16.dp)
@@ -41,7 +59,6 @@ fun NoticeHomeScreen(navController: NavController) {
             .fillMaxWidth()
             .fillMaxHeight()
     ) {
-
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -69,33 +86,29 @@ fun NoticeHomeScreen(navController: NavController) {
         }
 
         HorizontalLine()
-        NoticeItem(
-            title = "[공지] 서울특별시 강북구 4.19로 표지판 업데이트",
-            date = "2024.08.07",
-            navController = navController
-        )
-        ThinHorizontalLine()
-        NoticeItem(
-            title = "[공지] AI 보안패치 업데이트",
-            date = "2024.08.05",
-            navController = navController
-        )
-        ThinHorizontalLine()
-        NoticeItem(
-            title = "[공지] 서울특별시 도봉구 우이천로 45길 오류 확인",
-            date = "2024.08.05",
-            navController = navController
-        )
-        ThinHorizontalLine()
+        LazyColumn {
+            items(notices) { notice ->
+                NoticeItem(
+                    title = notice.title,
+                    date = notice.date,
+                    onClick = {
+                        // 선택한 공지사항으로 이동
+                        navController.navigate("noticeLetter/${notice.id}")
+                    }
+                )
+                ThinHorizontalLine()
+            }
+        }
     }
 }
 
 @Composable
-fun NoticeItem(title: String, date: String, navController: NavController) {
+fun NoticeItem(title: String, date: String, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 25.dp),
+            .padding(top = 25.dp)
+            .clickable { onClick() }, // 아이템 클릭 시 onClick 실행
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -125,12 +138,12 @@ fun NoticeItem(title: String, date: String, navController: NavController) {
             imageVector = Icons.Default.ArrowForward,
             contentDescription = "Arrow Forward",
             modifier = Modifier
-                .size(24.dp)
-                .clickable { navController.navigate("noticeLetter") }, // 오른쪽 화살표 클릭 시 noticeLetter로 이동
+                .size(24.dp),
             tint = Color.Black
         )
     }
 }
+
 
 @Composable
 fun HorizontalLine() {
@@ -156,5 +169,6 @@ fun ThinHorizontalLine() {
 @Composable
 fun PreviewNoticeHomeScreen() {
     val navController = rememberNavController()
-    NoticeHomeScreen(navController = navController)
+    val viewModel = NoticeViewModel()
+    NoticeHomeScreen(navController = navController, viewModel = viewModel)
 }

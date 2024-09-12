@@ -1,5 +1,7 @@
 package com.bestdriver.aaa_klaxon.community
 
+import Post
+import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -17,11 +19,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material3.Divider
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,6 +37,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -48,13 +56,43 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.bestdriver.aaa_klaxon.R
 import com.bestdriver.aaa_klaxon.ui.theme.MyPurple
+import com.bestdriver.aaa_klaxon.viewmodel.CommunityWriteScreenViewModel
+import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.Calendar
+import java.util.Locale
+
+data class Comment(
+    val userName: String,
+    val body: String,
+    val date: String,
+    val time: String
+)
 
 @Composable
-fun CommunityFeedScreen(navController: NavController) {
+fun CommunityFeedScreen(
+    navController: NavController,
+    viewModel: CommunityWriteScreenViewModel,
+    postId: String, // 게시글 ID는 필수
+    postTitle: String? = null,
+    postBody: String? = null,
+    timestamp: String? = null,
+    likeCount: Int? = null,
+    userName: String? = null
+) {
+    // StateFlow의 value를 사용하여 댓글 리스트를 가져옵니다.
+    val comments by viewModel.comments.collectAsState() // StateFlow의 현재 값을 구독
+
+    // 댓글 리스트를 가져옵니다.
+    val postComments = comments[postId] ?: emptyList()
+
+    // UI를 구성합니다.
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -65,254 +103,261 @@ fun CommunityFeedScreen(navController: NavController) {
             contentDescription = "Back",
             modifier = Modifier
                 .size(40.dp)
-                .clickable { navController.navigateUp() }, // 뒤로가기 클릭 시 이전 페이지로 이동
+                .clickable { navController.navigateUp() },
             tint = Color.Black
         )
         Spacer(modifier = Modifier.height(20.dp))
 
+        if (postTitle != null && postBody != null) {
+            PostItem(
+                post = Post(
+                    id = postId,
+                    title = postTitle,
+                    body = postBody,
+                    timestamp = timestamp ?: "",
+                    likeCount = likeCount ?: 0,
+                    userName = userName ?: "",
+                    commentCount = postComments.size // 댓글 수를 전달
+                ),
+                viewModel = viewModel // ViewModel을 전달
+            )
+        } else {
+            Text("Post details not available")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         LazyColumn(
             modifier = Modifier
-                .weight(1f) // 나머지 공간을 차지하도록 설정
-                .fillMaxWidth()
+                .fillMaxSize()
+                .weight(1f)
         ) {
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 20.dp)
-                ) {
-                    CircleCanvas(
-                        modifier = Modifier
-                            .size(70.dp) // Canvas의 크기를 지정
-                    )
-                    Column(
-                        modifier = Modifier
-                            .padding(start = 20.dp)
-                    ) {
-                        Text(
-                            text = "김덕우",
-                            fontSize = 28.sp,
-                            fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
-                            color = Color.Black,
-                            modifier = Modifier
-                                .padding(bottom = 6.dp)
-                        )
-
-                        Row {
-                            Text(
-                                text = "08/02",
-                                fontSize = 18.sp,
-                                fontFamily = FontFamily(Font(R.font.pretendard_regular)),
-                                color = Color.Black.copy(alpha = 0.5f),
-                            )
-                            Text(
-                                text = "13:00",
-                                fontSize = 18.sp,
-                                fontFamily = FontFamily(Font(R.font.pretendard_regular)),
-                                color = Color.Black.copy(alpha = 0.5f),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(start = 8.dp)
-                                    .padding(bottom = 20.dp)
-                            )
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(10.dp))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "카니발 쓰는 사람",
-                        fontSize = 28.sp,
-                        fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
-                        color = Color.Black
-                    )
-                    Icon(
-                        imageVector = Icons.Default.Favorite,
-                        contentDescription = "Favorite",
-                        modifier = Modifier
-                            .size(43.dp)
-                            .padding(start = 10.dp),
-                        tint = MyPurple
-                    )
-                }
-                Text(
-                    text = "저만 이런가요" +
-                            "\n천천히 표지판 있을 때 너무 천천히 움직여요" +
-                            "\n저와 같은 분 있나요..?",
-                    fontSize = 20.sp,
-                    fontFamily = FontFamily(Font(R.font.pretendard_medium)),
-                    color = Color.Black,
-                    modifier = Modifier
-                        .padding(top = 20.dp)
-                        .padding(bottom = 15.dp)
-                )
-                Row(
-                    modifier = Modifier
-                        .padding(end = 10.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Favorite,
-                        contentDescription = "Favorite",
-                        modifier = Modifier
-                            .size(25.dp)
-                            .padding(bottom = 4.dp),
-                        tint = MyPurple
-                    )
-
-                    Text(
-                        text = "35",
-                        fontSize = 18.sp,
-                        fontFamily = FontFamily(Font(R.font.pretendard_regular)),
-                        color = Color.Black,
-                        modifier = Modifier
-                            .padding(start = 4.dp)
-                            .padding(end = 4.dp),
-                    )
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = "Chat",
-                        modifier = Modifier
-                            .size(25.dp)
-                            .padding(bottom = 4.dp),
-                        tint = MyPurple
-                    )
-
-                    Text(
-                        text = "10",
-                        fontSize = 18.sp,
-                        fontFamily = FontFamily(Font(R.font.pretendard_regular)),
-                        color = Color.Black,
-                        modifier = Modifier
-                            .padding(bottom = 30.dp)
-                    )
-                }
-                ThinHorizontalLine()
-                Row(
-                    modifier = Modifier
-                        .padding(top = 30.dp),
-                ) {
-                    CircleCanvas(
-                        modifier = Modifier
-                            .size(40.dp)
-                    )
-                    Text(
-                        text = "박덕우",
-                        fontSize = 23.sp,
-                        fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
-                        color = Color.Black,
-                        modifier = Modifier
-                            .padding(start = 10.dp)
-                            .padding(top = 5.dp)
-                    )
-                }
-                Text(
-                    text = "엥 전 안 그래요",
-                    fontSize = 18.sp,
-                    fontFamily = FontFamily(Font(R.font.pretendard_medium)),
-                    color = Color.Black,
-                    modifier = Modifier
-                        .padding(top = 10.dp)
-                )
-                Row(
-                    modifier = Modifier
-                        .padding(top = 8.dp)
-                ) {
-                    Text(
-                        text = "08/02",
-                        fontSize = 15.sp,
-                        fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
-                        color = Color.Black.copy(alpha = 0.5f),
-                    )
-                    Text(
-                        text = "17:03",
-                        fontSize = 15.sp,
-                        fontFamily = FontFamily(Font(R.font.pretendard_medium)),
-                        color = Color.Black.copy(alpha = 0.5f),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 5.dp)
-                            .padding(bottom = 25.dp)
-                    )
-                }
-                ThinHorizontalLine()
-                Row(
-                    modifier = Modifier
-                        .padding(top = 25.dp),
-                ) {
-                    CircleCanvas(
-                        modifier = Modifier
-                            .size(40.dp)
-                    )
-                    Text(
-                        text = "배고파",
-                        fontSize = 23.sp,
-                        fontFamily = FontFamily(Font(R.font.pretendard_medium)),
-                        color = Color.Black,
-                        modifier = Modifier
-                            .padding(start = 10.dp)
-                            .padding(top = 5.dp)
-                    )
-                }
-                Text(
-                    text = "오? 저도 가끔 그래요",
-                    fontSize = 18.sp,
-                    fontFamily = FontFamily(Font(R.font.pretendard_regular)),
-                    color = Color.Black,
-                    modifier = Modifier
-                        .padding(top = 10.dp)
-                )
-                Row(
-                    modifier = Modifier
-                        .padding(top = 8.dp)
-                ) {
-                    Text(
-                        text = "08/02",
-                        fontSize = 15.sp,
-                        fontFamily = FontFamily(Font(R.font.pretendard_regular)),
-                        color = Color.Black.copy(alpha = 0.5f),
-                    )
-                    Text(
-                        text = "17:10",
-                        fontSize = 15.sp,
-                        fontFamily = FontFamily(Font(R.font.pretendard_regular)),
-                        color = Color.Black.copy(alpha = 0.5f),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 5.dp)
-                            .padding(bottom = 25.dp)
-                    )
-                }
-                ThinHorizontalLine()
+            items(postComments) { comment ->
+                CommentItem(comment)
             }
         }
 
-        // CommentSection을 화면 하단에 위치하도록 배치
-        CommentSection()
+        Spacer(modifier = Modifier.height(8.dp))
+
+        CommentSection(viewModel, postId)
+    }
+}
+
+
+
+
+
+@Composable
+fun PostItem(post: Post, viewModel: CommunityWriteScreenViewModel) {
+    // 예를 들어 댓글 리스트를 가져오는 부분
+    val comments = viewModel.getCommentsForPost(post.id)
+
+    // 상태를 기억하고 초기화합니다.
+    val isLiked = remember { mutableStateOf(false) }
+    val likeCount = remember { mutableStateOf(post.likeCount) } // 좋아요 카운트 초기화
+
+    // 로그 출력
+    Log.d("PostItem", "Comments size: ${comments.size}")
+    Log.d("PostItem", "First comment: ${comments.getOrNull(0)}")
+    Log.d("PostItem", "Second comment: ${comments.getOrNull(1)}")
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 20.dp)
+    ) {
+        CircleCanvas(
+            modifier = Modifier
+                .size(70.dp) // Canvas의 크기를 지정
+        )
+        Column(
+            modifier = Modifier
+                .padding(start = 20.dp)
+        ) {
+            Text(
+                text = post.userName,
+                fontSize = 28.sp,
+                fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
+                color = Color.Black,
+                modifier = Modifier
+                    .padding(bottom = 6.dp)
+            )
+
+            Row {
+                Text(
+                    text = post.timestamp.split(" ")[0], // 날짜
+                    fontSize = 18.sp,
+                    fontFamily = FontFamily(Font(R.font.pretendard_regular)),
+                    color = Color.Black.copy(alpha = 0.5f),
+                )
+//                Text(
+//                    text = post.timestamp.split(" ")[1], // 시간
+//                    fontSize = 18.sp,
+//                    fontFamily = FontFamily(Font(R.font.pretendard_regular)),
+//                    color = Color.Black.copy(alpha = 0.5f),
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(start = 8.dp)
+//                        .padding(bottom = 20.dp)
+//                )
+            }
+        }
+    }
+    Spacer(modifier = Modifier.height(10.dp))
+    Row(
+        modifier = Modifier
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = post.title,
+            fontSize = 28.sp,
+            fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
+            color = Color.Black
+        )
+        Icon(
+            imageVector = if (isLiked.value) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+            contentDescription = "Favorite",
+            modifier = Modifier
+                .size(43.dp)
+                .padding(start = 10.dp)
+                .clickable {
+                    isLiked.value = !isLiked.value
+                    likeCount.value = if (isLiked.value) likeCount.value + 1 else likeCount.value - 1
+                    viewModel.updateLikeCount(post.id, isLiked.value)
+                },
+            tint = MyPurple
+        )
+    }
+    Text(
+        text = post.body,
+        fontSize = 20.sp,
+        fontFamily = FontFamily(Font(R.font.pretendard_medium)),
+        color = Color.Black,
+        modifier = Modifier
+            .padding(top = 20.dp)
+            .padding(bottom = 15.dp)
+    )
+    Row(
+        modifier = Modifier
+            .padding(end = 10.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Default.Favorite,
+            contentDescription = "Favorite",
+            modifier = Modifier
+                .size(25.dp)
+                .padding(bottom = 4.dp),
+            tint = MyPurple
+        )
+
+        Text(
+            text = likeCount.value.toString(), // 하트 클릭 횟수를 표시
+            fontSize = 18.sp,
+            fontFamily = FontFamily(Font(R.font.pretendard_regular)),
+            color = Color.Black,
+            modifier = Modifier
+                .padding(start = 4.dp)
+                .padding(end = 4.dp),
+        )
+        Icon(
+            imageVector = Icons.Default.Person,
+            contentDescription = "Chat",
+            modifier = Modifier
+                .size(25.dp)
+                .padding(bottom = 4.dp),
+            tint = MyPurple
+        )
+
+        Text(
+            text = post.commentCount.toString(), // 댓글 수를 표시
+            fontSize = 18.sp,
+            fontFamily = FontFamily(Font(R.font.pretendard_regular)),
+            color = Color.Black,
+            modifier = Modifier
+                .padding(bottom = 30.dp)
+        )
+    }
+}
+
+
+
+
+
+@Composable
+fun CommentItem(comment: Comment) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 30.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+        ) {
+            CircleCanvas(
+                modifier = Modifier
+                    .size(40.dp) // Canvas의 크기를 지정
+            )
+            Text(
+                text = comment.userName,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Normal,
+                color = Color.Black,
+                modifier = Modifier
+                    .padding(start = 10.dp)
+                    .padding(top = 5.dp)
+            )
+        }
+        Text(
+            text = comment.body,
+            fontSize = 17.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color.Black,
+            modifier = Modifier
+                .padding(top = 10.dp)
+        )
+        Row (
+            modifier = Modifier
+                .padding(top = 8.dp)
+        ) {
+            Text(
+                text = comment.date,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color.Black.copy(alpha = 0.5f),
+            )
+            Text(
+                text = comment.time,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color.Black.copy(alpha = 0.5f),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 5.dp)
+                    .padding(bottom = 25.dp)
+            )
+        }
+        ThinHorizontalLine()
     }
 }
 
 @Composable
-fun CommentSection() {
-    // 댓글 입력 상태를 관리하는 변수
-    val comment = remember { mutableStateOf("") }
+fun CommentSection(viewModel: CommunityWriteScreenViewModel, postId: String) {
+    val commentText = remember { mutableStateOf("") }
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 60.dp) // 최소 높이 설정
+            .heightIn(min = 60.dp)
     ) {
-        // TextField
         TextField(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(end = 69.dp),
-            value = comment.value,
-            onValueChange = { newComment -> comment.value = newComment },
+            value = commentText.value,
+            onValueChange = { newComment -> commentText.value = newComment },
             placeholder = {
                 Text(
                     text = "댓글을 입력하세요",
@@ -327,39 +372,54 @@ fun CommentSection() {
 
         Box(
             modifier = Modifier
-                .align(Alignment.BottomEnd) // 하단 오른쪽 정렬
-                .size(70.dp, 60.dp) // 버튼의 너비와 높이 설정
+                .align(Alignment.BottomEnd)
+                .size(70.dp, 60.dp)
                 .padding(bottom = 4.dp)
-                .background(MyPurple) // 버튼 배경색
+                .background(MyPurple)
                 .clickable {
-                    // 등록 버튼 클릭 시 처리할 로직
-                    println("등록 버튼 클릭됨")
-                    // 댓글 입력 필드를 비우기
-                    comment.value = ""
+                    // 날짜와 시간 포맷을 SimpleDateFormat을 이용해 설정합니다.
+                    val dateFormat = SimpleDateFormat("MM/dd", Locale.getDefault())
+                    val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+                    val currentDate = dateFormat.format(Calendar.getInstance().time)
+                    val currentTime = timeFormat.format(Calendar.getInstance().time)
+
+                    viewModel.addComment(
+                        postId = postId,
+                        comment = Comment(
+                            userName = "임시 사용자", // 사용자 이름을 동적으로 설정할 수 있습니다.
+                            body = commentText.value,
+                            date = currentDate,
+                            time = currentTime
+                        )
+                    )
+                    commentText.value = "" // 댓글 등록 후 텍스트 필드를 비웁니다.
                 }
-                .padding(horizontal = 8.dp, vertical = 4.dp) // 내부 여백 설정
+                .padding(horizontal = 8.dp, vertical = 4.dp)
         ) {
             Text(
                 text = "등록",
                 fontSize = 16.sp,
                 fontFamily = FontFamily(Font(R.font.pretendard_medium)),
-                color = Color.White, // 텍스트 색상
+                color = Color.White,
                 modifier = Modifier
-                    .align(Alignment.Center) // 중앙 정렬
+                    .align(Alignment.Center)
             )
         }
     }
 }
 
+
+
+
+
+
 @Composable
 fun CircleCanvas(modifier: Modifier = Modifier) {
     Canvas(modifier = modifier) {
         val radius = size.minDimension / 2f
-
-        // 동그라미 그리기
         drawCircle(
             color = Color.Gray,
-            center = Offset(size.width / 2, size.height / 2), // Canvas의 중심을 원의 중심으로 설정
+            center = Offset(size.width / 2, size.height / 2),
             radius = radius
         )
     }
@@ -367,16 +427,19 @@ fun CircleCanvas(modifier: Modifier = Modifier) {
 
 @Composable
 fun ThinHorizontalLine() {
-    HorizontalDivider(
+    Divider(
         modifier = Modifier
-            .fillMaxWidth(),  // 전체 너비를 차지하게 설정
-        thickness = 1.dp,    // 선의 두께 설정
-        color = Color.Black.copy(alpha = 0.4f) // 선의 색상 설정
+            .fillMaxWidth(),
+        thickness = 1.dp,
+        color = Color.Black.copy(alpha = 0.4f)
     )
 }
 
 @Preview(showBackground = true)
 @Composable
 fun PreviewCommunityFeedScreen() {
-    CommunityFeedScreen(navController = rememberNavController())
+    val dummyViewModel = CommunityWriteScreenViewModel().apply {
+        // 필요한 경우 ViewModel에 더미 데이터를 설정합니다.
+        // 예: posts.add(Post(...))
+    }
 }
