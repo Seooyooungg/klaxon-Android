@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,54 +27,60 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-
+import com.bestdriver.aaa_klaxon.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileEditScreen(navController: NavController, modifier: Modifier = Modifier) {
-    var id by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
     var nickname by remember { mutableStateOf("") }
-    var carNumber by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
-
-    val allFieldsFilled = id.isNotEmpty() && password.isNotEmpty() && nickname.isNotEmpty() && carNumber.isNotEmpty() && phone.isNotEmpty()
+    val nicknameHasChanged = nickname.isNotEmpty()
 
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                modifier = Modifier.padding(top = 40.dp),
-                title = {
-                    Text(
-                        "프로필 편집",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 30.sp,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = {
-                        navController.navigateUp() // 이전 화면으로 돌아가기
-                    }) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                colors = TopAppBarDefaults.mediumTopAppBarColors(containerColor = Color.White)
+    Column(
+        modifier = Modifier
+            .padding(16.dp)
+            .padding(top = 20.dp)
+            .fillMaxWidth()
+            .fillMaxHeight()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 20.dp)
+                .padding(bottom = 50.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.ArrowBack,
+                contentDescription = "Back",
+                modifier = Modifier
+                    .size(40.dp)
+                    .clickable { navController.navigate("mypage") }, // 뒤로가기 클릭 시 mypage로 이동
+                tint = Color.Black
+            )
+            Text(
+                text = "프로필 편집",
+                fontSize = 30.sp,
+                fontFamily = FontFamily(Font(R.font.pretendard_extrabold)),
+                color = Color.Black,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 90.dp)
             )
         }
-    ) { paddingValues ->
+
+
         Column(
             modifier = modifier
                 .fillMaxSize()
-                .padding(paddingValues)
                 .padding(16.dp)
                 .clickable {
                     // 빈 배경 클릭 시 키보드 숨기기
@@ -98,7 +105,7 @@ fun ProfileEditScreen(navController: NavController, modifier: Modifier = Modifie
             )
 
             Text(
-                text = "아이디(이메일)*",
+                text = "아이디(이메일)",
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Medium,
                 color = Color.Black,
@@ -109,12 +116,23 @@ fun ProfileEditScreen(navController: NavController, modifier: Modifier = Modifie
                     .align(Alignment.Start)
             )
 
-            // 입력 필드
-            OutlinedTextField(
-                value = id,
-                onValueChange = { id = it },
-                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
-            )
+            // 이메일 표시 (읽기 전용), 테두리 추가
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp)
+                    .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
+            ) {
+                Text(
+                    text = "server_provided_email@example.com", // 서버에서 제공된 이메일
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.Gray,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp) // 패딩을 통해 텍스트와 테두리 사이의 공간 확보
+                )
+            }
 
             Text(
                 text = "닉네임*",
@@ -128,25 +146,29 @@ fun ProfileEditScreen(navController: NavController, modifier: Modifier = Modifie
                     .align(Alignment.Start)
             )
 
+            // 닉네임 입력 필드
             OutlinedTextField(
                 value = nickname,
                 onValueChange = { nickname = it },
-                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
             )
 
             Spacer(modifier = Modifier.weight(1f))
 
             Button(
                 onClick = {
-                    // TODO: 프로필 수정 로직 추가
+                    // 프로필 수정 로직 추가
+                    // 여기에 닉네임 변경 로직 추가
                 },
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
                     .padding(top = 16.dp)
                     .padding(bottom = 50.dp),
-                enabled = allFieldsFilled,
+                enabled = nicknameHasChanged,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF321D87)
+                    containerColor = if (nicknameHasChanged) Color(0xFF321D87) else Color.Gray
                 ),
                 shape = RoundedCornerShape(5.dp)
             ) {

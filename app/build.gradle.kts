@@ -1,7 +1,8 @@
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    id("com.google.dagger.hilt.android") version "2.44" // Hilt 플러그인 추가
+    kotlin("kapt") // KAPT 플러그인 추가
 }
 
 android {
@@ -51,7 +52,7 @@ android {
 }
 
 dependencies {
-
+    // 기존 의존성
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -72,8 +73,19 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
-    //Navigation
+    // Navigation
     val nav_version = "2.7.7"
-
     implementation("androidx.navigation:navigation-compose:$nav_version")
+
+    // Retrofit2 및 Gson 변환기 의존성 추가
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
+    // (선택 사항) OkHttp 로깅 인터셉터
+    implementation("com.squareup.okhttp3:logging-interceptor:4.10.0")
+
+    // Hilt 의존성 추가
+    implementation("com.google.dagger:hilt-android:2.44")
+    kapt("com.google.dagger:hilt-compiler:2.44")
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.6.1")
 }

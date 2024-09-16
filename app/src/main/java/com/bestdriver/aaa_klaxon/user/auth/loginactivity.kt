@@ -89,7 +89,7 @@ fun LoginScreen(
         ) {
             Text(
                 text = "클락션",
-                fontSize = 50.sp,
+                fontSize = 40.sp,
                 color = MyPurple,
                 fontFamily = FontFamily(Font(R.font.pretendard_extrabold)),
                 textAlign = TextAlign.Center,
