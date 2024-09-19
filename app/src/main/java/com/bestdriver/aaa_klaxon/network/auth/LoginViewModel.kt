@@ -1,4 +1,6 @@
 package com.bestdriver.aaa_klaxon.network.auth
+
+import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -6,9 +8,14 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import com.bestdriver.aaa_klaxon.network.auth.AuthApiService
+import com.bestdriver.aaa_klaxon.network.TokenManager
 import com.bestdriver.aaa_klaxon.network.auth.LoginRequest
+import retrofit2.Response
 
-class LoginViewModel(private val authApiService: AuthApiService) : ViewModel() {
+class LoginViewModel(
+    private val authApiService: AuthApiService,
+    private val context: Context // Context를 ViewModel에 전달
+) : ViewModel() {
 
     private val _email = MutableLiveData("")
     val email: LiveData<String> get() = _email
@@ -18,6 +25,8 @@ class LoginViewModel(private val authApiService: AuthApiService) : ViewModel() {
 
     private val _loginError = MutableLiveData("")
     val loginError: LiveData<String> get() = _loginError
+
+    private val tokenManager = TokenManager(context) // TokenManager 인스턴스 생성
 
     fun updateEmail(newEmail: String) {
         _email.value = newEmail
@@ -36,9 +45,13 @@ class LoginViewModel(private val authApiService: AuthApiService) : ViewModel() {
                 try {
                     val response = authApiService.login(LoginRequest(email, password))
                     if (response.isSuccessful) {
-                        val result = response.body()?.result
-                        result?.let {
-                            onSuccess(it.refreshToken) // 로그인 성공 시 refreshToken 반환
+                        // 액세스 토큰을 응답 헤더에서 추출
+                        val accessToken = response.headers()["Authorization"]
+                        if (accessToken != null) {
+                            tokenManager.saveToken(accessToken) // 액세스 토큰 저장
+                            onSuccess(accessToken) // 액세스 토큰 반환
+                        } else {
+                            _loginError.value = "액세스 토큰이 응답 헤더에 없습니다."
                         }
                     } else {
                         _loginError.value = "로그인 실패: ${response.code()}"

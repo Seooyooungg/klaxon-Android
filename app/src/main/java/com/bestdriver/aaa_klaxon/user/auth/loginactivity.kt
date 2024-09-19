@@ -3,6 +3,7 @@ package com.bestdriver.aaa_klaxon.login
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
@@ -36,6 +37,7 @@ import com.bestdriver.aaa_klaxon.network.auth.LoginViewModel
 import com.bestdriver.aaa_klaxon.ui.theme.AAA_klaxonTheme
 import com.bestdriver.aaa_klaxon.ui.theme.MyPurple
 import com.bestdriver.aaa_klaxon.R // 로고 파일이 포함된 리소스 패키지 추가
+import com.bestdriver.aaa_klaxon.network.TokenManager
 
 class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -75,7 +77,7 @@ fun LoginScreen(
     // LocalContext를 통해 AuthApiService 인스턴스 생성
     val context = LocalContext.current
     val authApiService = RetrofitClient.getInstance(context)
-    val viewModel = remember { LoginViewModel(authApiService) }
+    val viewModel = remember { LoginViewModel(authApiService, context) }
 
     // UI에서 사용하는 상태 값들
     val email by viewModel.email.observeAsState("")
@@ -158,7 +160,14 @@ fun LoginScreen(
             // 로그인 버튼
             Button(
                 onClick = {
-                    viewModel.onLoginClick { refreshToken ->
+                    viewModel.onLoginClick { accessToken ->
+                        // 액세스 토큰이 저장되었는지 확인
+                        val savedToken = TokenManager(context).getToken()
+                        if (savedToken != null) {
+                            Log.d("LoginScreen", "Saved Token: $savedToken")
+                        } else {
+                            Log.d("LoginScreen", "No Token Found")
+                        }
                         onLoginSuccess()
                     }
                 },
