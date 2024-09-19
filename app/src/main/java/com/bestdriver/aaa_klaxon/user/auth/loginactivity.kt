@@ -1,5 +1,6 @@
 package com.bestdriver.aaa_klaxon.login
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -24,12 +25,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.bestdriver.aaa_klaxon.mypage.MyPageActivity
 import com.bestdriver.aaa_klaxon.network.RetrofitClient
 import com.bestdriver.aaa_klaxon.network.auth.LoginViewModel
 import com.bestdriver.aaa_klaxon.ui.theme.AAA_klaxonTheme
@@ -49,12 +50,9 @@ class LoginActivity : ComponentActivity() {
                     composable("login") {
                         LoginScreen(
                             onLoginSuccess = {
-                                // 로그인 성공 시 MyPageActivity로 이동
-                                val intent = Intent(this@LoginActivity, MyPageActivity::class.java)
-                                startActivity(intent)
-                                finish() // 로그인 후 Activity 종료
+                                navController.navigate("main")
                             },
-                            navController = navController
+                            navController = navController,
                         )
                     }
                     composable("signup") {
@@ -74,8 +72,9 @@ fun LoginScreen(
     navController: NavController,
     modifier: Modifier = Modifier
 ) {
-    // AuthApiService와 LoginViewModel을 직접 생성
-    val authApiService = RetrofitClient.instance
+    // LocalContext를 통해 AuthApiService 인스턴스 생성
+    val context = LocalContext.current
+    val authApiService = RetrofitClient.getInstance(context)
     val viewModel = remember { LoginViewModel(authApiService) }
 
     // UI에서 사용하는 상태 값들
@@ -202,14 +201,16 @@ fun LoginScreen(
     }
 }
 
+
+
 @Preview(showBackground = true)
 @Composable
 fun PreviewLoginScreen() {
-    val navController = rememberNavController() // 미리보기용 NavController
-
-    // LoginScreen 미리보기
+    // LoginScreen 미리보기를 위한 Dummy onLoginSuccess 함수
     LoginScreen(
         onLoginSuccess = { /* 로그인 성공 후 동작 */ },
-        navController = navController
+        navController = rememberNavController() // 네비게이션을 위한 NavController 생성
     )
 }
+
+
