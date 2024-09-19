@@ -52,16 +52,17 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import androidx.room.util.copy
 import com.bestdriver.aaa_klaxon.R
+import com.bestdriver.aaa_klaxon.network.community.CommunityWriteScreenViewModel
+import com.bestdriver.aaa_klaxon.network.community.Post
 import com.bestdriver.aaa_klaxon.ui.theme.AAA_klaxonTheme
 import com.bestdriver.aaa_klaxon.ui.theme.MyPurple
-import com.bestdriver.aaa_klaxon.viewmodel.CommunityWriteScreenViewModel
 
 
 @Composable
 fun CommunityScreen(
     navController: NavController,
     viewModel: CommunityWriteScreenViewModel,
-    newPostId: String? = null // 새로 추가된 게시글 ID를 선택적으로 받을 수 있습니다
+    newPostId: Int? = null // 새로 추가된 게시글 ID를 선택적으로 받을 수 있습니다
 ) {
     val posts by viewModel.posts.collectAsState() // StateFlow<List<Post>>를 List<Post>로 변환합니다
     val mostLikedPost by remember { derivedStateOf { viewModel.getMostLikedPost() } }
@@ -69,28 +70,16 @@ fun CommunityScreen(
     // 새 게시글 ID가 변경될 때마다 네비게이션을 수행
     LaunchedEffect(newPostId) {
         newPostId?.let { postId ->
-            val post = posts.find { it.id == postId }
+            val post = posts.find { it.post_id == postId }
             if (post != null) {
                 // 게시글 상세 페이지로 이동
-                navController.navigate("communityFeed/${post.id}/${post.title}/${post.body}/${post.timestamp}/${post.likeCount}/${post.userName}") {
+                navController.navigate("communityFeed/${post.post_id}/${post.title}/${post.main_text}/${post.createdAt}/${post.like_count}/${post.nickname}") {
                     // 이 코드로 인해 CommunityScreen이 제거되고 CommunityFeed가 보여질 것입니다.
                     popUpTo("communityHome") { inclusive = true }
                 }
             }
         }
     }
-
-    // 네비게이션 효과를 추가합니다
-  //      LaunchedEffect(newPostId) {
-    //           newPostId?.let { postId ->
-    //          val post = posts.find { it.id == postId }
-    //          post?.let {
-    //              navController.navigate("communityFeed/${it.id}/${it.title}/${it.body}/${it.timestamp}/${it.likeCount}/${it.userName}") {
-    //                  popUpTo("communityScreen") { inclusive = true }
-    //              }
-    //          }
-    //      }
-    //  }
 
     Box(
         modifier = Modifier
@@ -131,15 +120,15 @@ fun CommunityScreen(
                             .fillMaxWidth()
                             .padding(bottom = 16.dp)
                             .clickable {
-                                navController.navigate("communityFeed/${mostLikedPost!!.id}/${mostLikedPost!!.title}/${mostLikedPost!!.body}/${mostLikedPost!!.timestamp}/${mostLikedPost!!.likeCount}/${mostLikedPost!!.userName}")
+                                navController.navigate("communityFeed/${mostLikedPost!!.post_id}/${mostLikedPost!!.title}/${mostLikedPost!!.main_text}/${mostLikedPost!!.createdAt}/${mostLikedPost!!.like_count}/${mostLikedPost!!.nickname}")
                             }
                     ) {
                         PopularCard(
                             title = mostLikedPost!!.title,
-                            content = mostLikedPost!!.body,
-                            date = mostLikedPost!!.timestamp,
-                            favoriteCount = mostLikedPost!!.likeCount,
-                            commentCount = mostLikedPost!!.commentCount
+                            content = mostLikedPost!!.main_text,
+                            date = mostLikedPost!!.createdAt,
+                            favoriteCount = mostLikedPost!!.like_count,
+                            commentCount = mostLikedPost!!.comment_count
                         )
                     }
                 }
@@ -164,15 +153,15 @@ fun CommunityScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
-                            navController.navigate("communityFeed/${post.id}/${post.title}/${post.body}/${post.timestamp}/${post.likeCount}/${post.userName}")
+                            navController.navigate("communityFeed/${post.post_id}/${post.title}/${post.main_text}/${post.createdAt}/${post.like_count}/${post.nickname}")
                         }
                 ) {
                     CommunityPost(
                         title = post.title,
-                        content = post.body,
-                        date = post.timestamp,
-                        favoriteCount = post.likeCount,
-                        commentCount = post.commentCount
+                        content = post.main_text,
+                        date = post.createdAt,
+                        favoriteCount = post.like_count,
+                        commentCount = post.comment_count
                     )
                 }
                 ThinHorizontalLine()
@@ -198,7 +187,6 @@ fun CommunityScreen(
             }
         }
     }
-
 }
 
 
@@ -452,19 +440,22 @@ data class CommunityItem(
     val commentCount: Int
 )
 
-@Composable
-fun PreviewCommunityScreen() {
-    // Create a mock or test instance of the ViewModel
-    val mockViewModel = CommunityWriteScreenViewModel().apply {
-        // Initialize with some test data
-        val posts = listOf(
-            Post("wow","Test Post 1", "This is a test post", "User1", "2024-09-03T10:00:00Z", 10, 5),
-            Post("wow", "Test Post 2", "Another test post", "User2", "2024-09-03T11:00:00Z", 5, 2)
-        )
-    }
-
-    CommunityScreen(
-        navController = rememberNavController(),
-        viewModel = mockViewModel
-    )
-}
+//@Composable
+//fun PreviewCommunityScreen() {
+//    // Create a mock or test instance of the ViewModel
+//    val mockViewModel = CommunityWriteScreenViewModel().apply {
+//        // Initialize with some test data
+//        val posts = listOf(
+//            Post(post_id = 1, user_id = 1, userName = "User1", title = "Test Post 1", main_text = "This is a test post", createdAt = "2024-09-03T10:00:00Z", like_count = 10, comment_count = 5),
+//            Post(post_id = 2, user_id = 2, userName = "User2", title = "Test Post 2", main_text = "Another test post", createdAt = "2024-09-03T11:00:00Z", like_count = 5, comment_count = 2)
+//        )
+//        // Assuming you have a method to set posts in the ViewModel
+//        // You might need to create a method to add mock posts
+//        _posts.value = posts // Update the private _posts directly
+//    }
+//
+//    CommunityScreen(
+//        navController = rememberNavController(),
+//        viewModel = mockViewModel
+//    )
+//}
