@@ -76,7 +76,7 @@ fun LoginScreen(
 ) {
     // LocalContext를 통해 AuthApiService 인스턴스 생성
     val context = LocalContext.current
-    val authApiService = RetrofitClient.getInstance(context)
+    val authApiService = RetrofitClient.getAuthApiService(context)
     val viewModel = remember { LoginViewModel(authApiService, context) }
 
     // UI에서 사용하는 상태 값들

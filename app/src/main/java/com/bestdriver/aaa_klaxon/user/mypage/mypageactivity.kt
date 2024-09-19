@@ -1,7 +1,7 @@
 package com.bestdriver.aaa_klaxon.mypage
 
-import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -15,20 +15,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.bestdriver.aaa_klaxon.ui.theme.AAA_klaxonTheme
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.bestdriver.aaa_klaxon.R
 import com.bestdriver.aaa_klaxon.community.ThinHorizontalLine
+import com.bestdriver.aaa_klaxon.network.RetrofitClient
+import com.bestdriver.aaa_klaxon.network.TokenManager
+import com.bestdriver.aaa_klaxon.ui.theme.AAA_klaxonTheme
 import com.bestdriver.aaa_klaxon.ui.theme.MyPurple
+import kotlinx.coroutines.launch
 
 class MyPageActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,12 +42,42 @@ class MyPageActivity : ComponentActivity() {
         }
     }
 }
+
 @Composable
 fun MyPageScreen(navController: NavController, modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    val userName by remember { mutableStateOf("User Name") }
-    val carNumber by remember { mutableStateOf("Car Number") }
+    var userName by remember { mutableStateOf("User Name") }
+    var carNumber by remember { mutableStateOf("Car Number") }
     var showLogoutDialog by remember { mutableStateOf(false) }
+
+    // 사용자 정보 불러오기 로직 추가 (코루틴 사용)
+    LaunchedEffect(Unit) {
+        val mypageApiService = RetrofitClient.getMypageApiService(context)
+
+        try {
+            val response = mypageApiService.getUserInfo()
+
+            // 요청과 응답 로깅
+            Log.d("MyPage", "Request URL: ${response.raw().request.url}")
+            Log.d("MyPage", "Request Headers: ${response.raw().request.headers}")
+            Log.d("MyPage", "Response Code: ${response.code()}")
+            Log.d("MyPage", "Response Message: ${response.message()}")
+
+            if (response.isSuccessful) {
+                response.body()?.let { userInfoResponse ->
+                    userName = userInfoResponse.result.nickname
+                    carNumber = userInfoResponse.result.car_number
+                    Log.d("MyPage", "User Info: ${userInfoResponse.result.nickname}, ${userInfoResponse.result.car_number}")
+                }
+            } else {
+                Log.e("MyPage", "Error: ${response.code()}, ${response.message()}")
+            }
+        } catch (e: Exception) {
+            Log.e("MyPage", "Exception: ${e.message}")
+        }
+    }
+
+
 
     LazyColumn(
         modifier = modifier
@@ -86,22 +118,21 @@ fun MyPageScreen(navController: NavController, modifier: Modifier = Modifier) {
                     Text("Profile", color = Color.White)
                 }
 
-                Column (
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 30.dp), // 전체 너비를 사용
-                    horizontalAlignment = Alignment.Start // 전체 열을 왼쪽으로 정렬
+                        .padding(start = 30.dp),
+                    horizontalAlignment = Alignment.Start
                 ) {
                     Text(
-                        text = "$userName",
+                        text = userName,
                         fontSize = 23.sp,
                         fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
                         color = Color.Black,
-                        modifier = Modifier
-                            .padding(bottom = 16.dp),
+                        modifier = Modifier.padding(bottom = 16.dp)
                     )
                     Text(
-                        text = "$carNumber",
+                        text = carNumber,
                         fontSize = 18.sp,
                         fontFamily = FontFamily(Font(R.font.pretendard_medium)),
                         color = Color.Black
@@ -123,7 +154,7 @@ fun MyPageScreen(navController: NavController, modifier: Modifier = Modifier) {
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MyPurple.copy(alpha = 0.3f)
                 ),
-                shape = RoundedCornerShape(6.dp) // 모서리 둥글기를 조절
+                shape = RoundedCornerShape(6.dp)
             ) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -140,7 +171,7 @@ fun MyPageScreen(navController: NavController, modifier: Modifier = Modifier) {
 
             Spacer(modifier = Modifier.height(30.dp))
 
-            HorizontalDivider(thickness = 1.dp, color = Color.Gray)
+            ThinHorizontalLine()
 
             Spacer(modifier = Modifier.height(20.dp))
         }
@@ -158,9 +189,7 @@ fun MyPageScreen(navController: NavController, modifier: Modifier = Modifier) {
 
                 MenuItem(
                     text = "오분류 신고내역",
-                    onClick = {
-                        navController.navigate("reportHistory")
-                    }
+                    onClick = { navController.navigate("reportHistory") }
                 )
 
                 MenuItem(
@@ -169,7 +198,7 @@ fun MyPageScreen(navController: NavController, modifier: Modifier = Modifier) {
                 )
 
                 Spacer(modifier = Modifier.height(15.dp))
-                HorizontalDivider(thickness = 0.8.dp, color = Color.Gray.copy(alpha = 0.5f))
+                ThinHorizontalLine()
                 Spacer(modifier = Modifier.height(15.dp))
 
                 Text(
@@ -177,26 +206,22 @@ fun MyPageScreen(navController: NavController, modifier: Modifier = Modifier) {
                     fontSize = 23.sp,
                     fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
                     color = Color.Black,
-                    modifier = Modifier
-                        .padding(top = 16.dp)
+                    modifier = Modifier.padding(top = 16.dp)
                 )
                 Spacer(modifier = Modifier.height(15.dp))
 
                 MenuItem(
                     text = "로그아웃",
-                    onClick = {
-                        showLogoutDialog = true
-                    }
+                    onClick = { showLogoutDialog = true }
                 )
+
                 MenuItem(
                     text = "탈퇴하기",
-                    onClick = {
-                        navController.navigate("deleteAccount")
-                    }
+                    onClick = { navController.navigate("deleteAccount") }
                 )
 
                 Spacer(modifier = Modifier.height(15.dp))
-                HorizontalDivider(thickness = 0.8.dp, color = Color.Gray.copy(alpha = 0.5f))
+                ThinHorizontalLine()
                 Spacer(modifier = Modifier.height(15.dp))
 
                 Text(
@@ -204,17 +229,14 @@ fun MyPageScreen(navController: NavController, modifier: Modifier = Modifier) {
                     fontSize = 23.sp,
                     fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
                     color = Color.Black,
-                    modifier = Modifier
-                        .padding(top = 16.dp)
+                    modifier = Modifier.padding(top = 16.dp)
                 )
 
                 Spacer(modifier = Modifier.height(15.dp))
 
                 MenuItem(
                     text = "공지사항",
-                    onClick = {
-                        navController.navigate("notice")
-                    }
+                    onClick = { navController.navigate("notice") }
                 )
             }
         }
@@ -241,6 +263,7 @@ fun MyPageScreen(navController: NavController, modifier: Modifier = Modifier) {
         )
     }
 }
+
 @Composable
 fun MenuItem(text: String, onClick: () -> Unit) {
     Row(
@@ -254,11 +277,10 @@ fun MenuItem(text: String, onClick: () -> Unit) {
             text = text,
             fontSize = 18.sp,
             color = Color.Black,
-            fontFamily = FontFamily(Font(R.font.pretendard_medium)),
+            fontFamily = FontFamily(Font(R.font.pretendard_medium))
         )
     }
 }
-
 
 @Preview(showBackground = true)
 @Composable

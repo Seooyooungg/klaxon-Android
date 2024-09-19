@@ -1,28 +1,46 @@
 package com.bestdriver.aaa_klaxon.network
 
 import android.content.Context
-import com.bestdriver.aaa_klaxon.network.AuthInterceptor
-import com.bestdriver.aaa_klaxon.network.TokenManager
-import com.bestdriver.aaa_klaxon.network.auth.AuthApiService
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import com.bestdriver.aaa_klaxon.network.auth.AuthApiService
+import com.bestdriver.aaa_klaxon.network.mypage.MypageApiService
+import okhttp3.logging.HttpLoggingInterceptor
 
 object RetrofitClient {
     private const val BASE_URL = "http://43.202.104.135:3000/"
 
-    fun getInstance(context: Context): AuthApiService {
-        val tokenManager = TokenManager(context)
+    private var retrofit: Retrofit? = null
 
-        val okHttpClient = OkHttpClient.Builder()
-            .addInterceptor(AuthInterceptor(tokenManager)) // AuthInterceptor 추가
-            .build()
+    private fun getRetrofitInstance(context: Context): Retrofit {
+        if (retrofit == null) {
+            val tokenManager = TokenManager(context)
 
-        return Retrofit.Builder()
-            .baseUrl(BASE_URL)
-            .addConverterFactory(GsonConverterFactory.create())
-            .client(okHttpClient)
-            .build()
-            .create(AuthApiService::class.java)
+            // 로깅 인터셉터 추가
+            val loggingInterceptor = HttpLoggingInterceptor().apply {
+                level = HttpLoggingInterceptor.Level.BODY
+            }
+
+            val okHttpClient = OkHttpClient.Builder()
+                .addInterceptor(loggingInterceptor) // 로깅 인터셉터 추가
+                .addInterceptor(AuthInterceptor(tokenManager))
+                .build()
+
+            retrofit = Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .client(okHttpClient)
+                .build()
+        }
+        return retrofit!!
+    }
+
+    fun getAuthApiService(context: Context): AuthApiService {
+        return getRetrofitInstance(context).create(AuthApiService::class.java)
+    }
+
+    fun getMypageApiService(context: Context): MypageApiService {
+        return getRetrofitInstance(context).create(MypageApiService::class.java)
     }
 }

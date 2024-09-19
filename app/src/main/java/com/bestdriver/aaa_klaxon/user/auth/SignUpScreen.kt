@@ -29,7 +29,7 @@ fun SignUpScreen(
 ) {
     // Get AuthApiService instance with context
     val context = LocalContext.current
-    val authApiService = RetrofitClient.getInstance(context)
+    val authApiService = RetrofitClient.getAuthApiService(context)
     val viewModel = remember {
         SignUpViewModel(authApiService)
     }
