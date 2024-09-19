@@ -40,22 +40,29 @@ class SignUpViewModel(
         val nickname = _nickname.value.orEmpty()
         val car_number = _car_number.value.orEmpty()
 
-        if (email.isNotEmpty() && password.isNotEmpty() && nickname.isNotEmpty() && car_number.isNotEmpty() ) {
+        if (email.isNotEmpty() && password.isNotEmpty() && nickname.isNotEmpty() && car_number.isNotEmpty()) {
             viewModelScope.launch {
                 try {
                     val request = SignUpRequest(email, password, nickname, car_number)
                     val response = authApiService.signUp(request)
+
                     if (response.isSuccessful) {
-                        navController.popBackStack()
+                        response.body()?.let { signUpResponse ->
+                            if (signUpResponse.isSuccess) {
+                                navController.popBackStack()
+                            } else {
+                                _dialogMessage.value = "회원가입 실패: ${signUpResponse.message}"
+                                _showDialog.value = true
+                            }
+                        }
                     } else {
-                        _dialogMessage.value = "회원가입에 실패했습니다: ${response.code()}"
-                        _showDialog.value = true
+                        handleErrorResponse(response.code())
                     }
                 } catch (e: HttpException) {
                     _dialogMessage.value = "회원가입에 실패했습니다: ${e.message()}"
                     _showDialog.value = true
                 } catch (e: Exception) {
-                    Log.e("SignUp", "Unknown error occurred", e)  // 예외를 로그로 출력
+                    Log.e("SignUp", "Unknown error occurred", e)
                     _dialogMessage.value = "알 수 없는 오류가 발생했습니다: ${e.localizedMessage}"
                     _showDialog.value = true
                 }
@@ -64,6 +71,24 @@ class SignUpViewModel(
             _dialogMessage.value = "모든 필드를 올바르게 입력해 주세요."
             _showDialog.value = true
         }
+    }
+
+    private fun handleErrorResponse(code: Int) {
+        when (code) {
+            409 -> {
+                _dialogMessage.value = "이미 존재하는 사용자입니다."
+            }
+            400 -> {
+                _dialogMessage.value = "잘못된 요청입니다. 모든 필드를 확인해 주세요."
+            }
+            500 -> {
+                _dialogMessage.value = "서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."
+            }
+            else -> {
+                _dialogMessage.value = "알 수 없는 오류가 발생했습니다: $code"
+            }
+        }
+        _showDialog.value = true
     }
 
     fun updateEmail(newEmail: String) {

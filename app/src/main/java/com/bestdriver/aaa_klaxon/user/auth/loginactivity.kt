@@ -1,41 +1,40 @@
 package com.bestdriver.aaa_klaxon.login
 
-import androidx.compose.foundation.Image
-import androidx.compose.ui.res.painterResource
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.bestdriver.aaa_klaxon.ui.theme.AAA_klaxonTheme
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.bestdriver.aaa_klaxon.R
 import com.bestdriver.aaa_klaxon.mypage.MyPageActivity
+import com.bestdriver.aaa_klaxon.network.RetrofitClient
+import com.bestdriver.aaa_klaxon.network.auth.LoginViewModel
+import com.bestdriver.aaa_klaxon.ui.theme.AAA_klaxonTheme
 import com.bestdriver.aaa_klaxon.ui.theme.MyPurple
+import com.bestdriver.aaa_klaxon.R // 로고 파일이 포함된 리소스 패키지 추가
 
 class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,7 +62,6 @@ class LoginActivity : ComponentActivity() {
                             navController = navController
                         )
                     }
-                    // 여기에 다른 composable 추가 가능
                 }
             }
         }
@@ -76,25 +74,29 @@ fun LoginScreen(
     navController: NavController,
     modifier: Modifier = Modifier
 ) {
-    var username by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var loginError by remember { mutableStateOf("") }
+    // AuthApiService와 LoginViewModel을 직접 생성
+    val authApiService = RetrofitClient.instance
+    val viewModel = remember { LoginViewModel(authApiService) }
 
-    // Box를 사용하여 Column을 중앙에 배치
+    // UI에서 사용하는 상태 값들
+    val email by viewModel.email.observeAsState("")
+    val password by viewModel.password.observeAsState("")
+    val loginError by viewModel.loginError.observeAsState("")
+
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(Color.White)
             .padding(16.dp),
-        contentAlignment = Alignment.Center // Box의 자식 컨텐츠를 중앙에 정렬
+        contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                    .fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
                 .padding(bottom = 100.dp)
         ) {
-            // 제목
+            // 제목 및 로고
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
@@ -102,12 +104,12 @@ fun LoginScreen(
                     .padding(bottom = 16.dp)
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.logo),
+                    painter = painterResource(id = R.drawable.logo), // 로고 이미지
                     contentDescription = null,
                     contentScale = ContentScale.Fit,
                     modifier = Modifier
                         .width(140.dp)
-                        .height(100.dp)// Adjust size as needed
+                        .height(100.dp)
                 )
                 Text(
                     text = "K l a x o n",
@@ -121,20 +123,21 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 아이디 입력 필드
+            // 이메일 입력 필드
             OutlinedTextField(
-                value = username,
-                onValueChange = { username = it },
+                value = email,
+                onValueChange = { viewModel.updateEmail(it) },
                 singleLine = true,
                 label = { Text("아이디", fontSize = 20.sp) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
             )
+
             // 비밀번호 입력 필드
             OutlinedTextField(
                 value = password,
-                onValueChange = { password = it },
+                onValueChange = { viewModel.updatePassword(it) },
                 singleLine = true,
                 label = { Text("비밀번호", fontSize = 20.sp) },
                 modifier = Modifier
@@ -143,28 +146,21 @@ fun LoginScreen(
                 visualTransformation = PasswordVisualTransformation()
             )
 
-            // 로그인 오류 메시지
+            // 로그인 오류 메시지 표시
             if (loginError.isNotEmpty()) {
                 Text(
                     text = loginError,
                     color = Color.Red,
                     fontSize = 16.sp,
-                    modifier = Modifier.padding(vertical = 8.dp),
-                    fontFamily = FontFamily(Font(R.font.pretendard_medium))
+                    modifier = Modifier.padding(vertical = 8.dp)
                 )
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
 
             // 로그인 버튼
             Button(
                 onClick = {
-                    if (username.isNotBlank() && password.isNotBlank()) {
-                        // 아이디와 비밀번호가 모두 입력된 경우
+                    viewModel.onLoginClick { refreshToken ->
                         onLoginSuccess()
-                    } else {
-                        // 아이디 또는 비밀번호가 비어있는 경우
-                        loginError = "아이디와 비밀번호를 입력해 주세요."
                     }
                 },
                 modifier = Modifier
@@ -178,18 +174,14 @@ fun LoginScreen(
             ) {
                 Text("로그인",
                     fontSize = 21.sp,
-                    color = Color.White,
-                    fontFamily = FontFamily(Font(R.font.pretendard_medium)),
+                    color = Color.White
                 )
             }
 
-            Spacer(modifier = Modifier.height(2.dp))
-
-            // 하단 링크
+            // 회원가입 및 아이디/비밀번호 찾기 링크
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
-
             ) {
                 Text(
                     text = "회원가입",
@@ -197,17 +189,13 @@ fun LoginScreen(
                         .clickable { navController.navigate("signup") }
                         .padding(end = 16.dp),
                     color = MyPurple,
-                    fontSize = 18.sp,
-                    fontFamily = FontFamily(Font(R.font.pretendard_regular)),
-                    textAlign = TextAlign.Center
+                    fontSize = 18.sp
                 )
                 Text(
                     text = "아이디/비밀번호 찾기",
                     modifier = Modifier.clickable { /* 아이디/비밀번호 찾기 로직 추가 */ },
                     color = MyPurple,
-                    fontSize = 18.sp,
-                    fontFamily = FontFamily(Font(R.font.pretendard_regular)),
-                    textAlign = TextAlign.Center
+                    fontSize = 18.sp
                 )
             }
         }
