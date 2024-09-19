@@ -14,29 +14,33 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.bestdriver.aaa_klaxon.R
 import com.bestdriver.aaa_klaxon.ui.theme.AAA_klaxonTheme
 import com.bestdriver.aaa_klaxon.ui.theme.MyPurple
 import com.bestdriver.aaa_klaxon.util.CustomTopAppBar
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.livedata.observeAsState
+import com.bestdriver.aaa_klaxon.network.RetrofitClient
 import com.bestdriver.aaa_klaxon.network.auth.SignUpViewModel
 
 @Composable
 fun SignUpScreen(
     navController: NavController,
-    viewModel: SignUpViewModel = viewModel(),
     modifier: Modifier = Modifier
 ) {
+    // Create an instance of AuthApiService manually
+    val authApiService = RetrofitClient.instance
+    // Create the SignUpViewModel manually by passing the AuthApiService instance
+    val viewModel = remember {
+        SignUpViewModel(authApiService)
+    }
+
     val email by viewModel.email.observeAsState("")
     val password by viewModel.password.observeAsState("")
     val nickname by viewModel.nickname.observeAsState("")
     val car_number by viewModel.car_number.observeAsState("")
-    val phone_number by viewModel.phone_number.observeAsState("")
     val showDialog by viewModel.showDialog.observeAsState(false)
     val dialogMessage by viewModel.dialogMessage.observeAsState("")
 
-    val isFormValid = email.isNotEmpty() && password.isNotEmpty() && nickname.isNotEmpty() && car_number.isNotEmpty() && phone_number.isNotEmpty()
+    val isFormValid = email.isNotEmpty() && password.isNotEmpty() && nickname.isNotEmpty() && car_number.isNotEmpty()
 
     Scaffold(
         topBar = {
@@ -121,21 +125,6 @@ fun SignUpScreen(
                     .padding(vertical = 4.dp)
             )
 
-            // Phone Number Field
-            Text(
-                text = "휴대폰*",
-                fontSize = 13.sp,
-                modifier = Modifier.padding(top = 20.dp)
-            )
-            OutlinedTextField(
-                value = phone_number,
-                onValueChange = { viewModel.updatePhoneNumber(it) },
-                singleLine = true,
-                placeholder = { Text("- 없이 숫자만 입력해주세요,", fontSize = 15.sp) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp)
-            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -178,6 +167,7 @@ fun SignUpScreen(
         }
     }
 }
+
 
 @Preview(showBackground = true)
 @Composable

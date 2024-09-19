@@ -1,5 +1,6 @@
 package com.bestdriver.aaa_klaxon.network.auth
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -11,8 +12,7 @@ import retrofit2.HttpException
 import javax.inject.Inject
 
 
-@HiltViewModel
-class SignUpViewModel @Inject constructor(
+class SignUpViewModel(
     private val authApiService: AuthApiService
 ) : ViewModel() {
 
@@ -28,9 +28,6 @@ class SignUpViewModel @Inject constructor(
     private val _car_number = MutableLiveData("")
     val car_number: LiveData<String> get() = _car_number
 
-    private val _phone_number = MutableLiveData("")
-    val phone_number: LiveData<String> get() = _phone_number
-
     private val _showDialog = MutableLiveData(false)
     val showDialog: LiveData<Boolean> get() = _showDialog
 
@@ -42,24 +39,31 @@ class SignUpViewModel @Inject constructor(
         val password = _password.value.orEmpty()
         val nickname = _nickname.value.orEmpty()
         val car_number = _car_number.value.orEmpty()
-        val phone_number = _phone_number.value.orEmpty()
 
-        if (email.isNotEmpty() && password.isNotEmpty() && nickname.isNotEmpty() && car_number.isNotEmpty() && phone_number.isNotEmpty()) {
+        if (email.isNotEmpty() && password.isNotEmpty() && nickname.isNotEmpty() && car_number.isNotEmpty()) {
             viewModelScope.launch {
                 try {
-                    val request = SignUpRequest(email, password, nickname, car_number, phone_number)
+                    val request = SignUpRequest(email, password, nickname, car_number)
                     val response = authApiService.signUp(request)
+
                     if (response.isSuccessful) {
-                        navController.popBackStack()
+                        response.body()?.let { signUpResponse ->
+                            if (signUpResponse.isSuccess) {
+                                navController.popBackStack()
+                            } else {
+                                _dialogMessage.value = "회원가입 실패: ${signUpResponse.message}"
+                                _showDialog.value = true
+                            }
+                        }
                     } else {
-                        _dialogMessage.value = "회원가입에 실패했습니다: ${response.code()}"
-                        _showDialog.value = true
+                        handleErrorResponse(response.code())
                     }
                 } catch (e: HttpException) {
                     _dialogMessage.value = "회원가입에 실패했습니다: ${e.message()}"
                     _showDialog.value = true
                 } catch (e: Exception) {
-                    _dialogMessage.value = "알 수 없는 오류가 발생했습니다."
+                    Log.e("SignUp", "Unknown error occurred", e)
+                    _dialogMessage.value = "알 수 없는 오류가 발생했습니다: ${e.localizedMessage}"
                     _showDialog.value = true
                 }
             }
@@ -67,6 +71,24 @@ class SignUpViewModel @Inject constructor(
             _dialogMessage.value = "모든 필드를 올바르게 입력해 주세요."
             _showDialog.value = true
         }
+    }
+
+    private fun handleErrorResponse(code: Int) {
+        when (code) {
+            409 -> {
+                _dialogMessage.value = "이미 존재하는 사용자입니다."
+            }
+            400 -> {
+                _dialogMessage.value = "잘못된 요청입니다. 모든 필드를 확인해 주세요."
+            }
+            500 -> {
+                _dialogMessage.value = "서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."
+            }
+            else -> {
+                _dialogMessage.value = "알 수 없는 오류가 발생했습니다: $code"
+            }
+        }
+        _showDialog.value = true
     }
 
     fun updateEmail(newEmail: String) {
@@ -83,10 +105,6 @@ class SignUpViewModel @Inject constructor(
 
     fun updateCarNumber(newCarNumber: String) {
         _car_number.value = newCarNumber
-    }
-
-    fun updatePhoneNumber(newPhoneNumber: String) {
-        _phone_number.value = newPhoneNumber
     }
 
     fun updateDialogMessage(message: String) {

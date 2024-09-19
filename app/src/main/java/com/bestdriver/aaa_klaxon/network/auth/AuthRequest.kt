@@ -5,5 +5,9 @@ data class SignUpRequest(
     val password: String,
     val nickname: String,
     val car_number: String,
-    val phone_number: String
+)
+
+data class LoginRequest(
+    val email: String,
+    val password: String
 )

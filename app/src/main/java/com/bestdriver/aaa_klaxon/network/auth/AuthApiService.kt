@@ -7,5 +7,8 @@ import retrofit2.http.POST
 // 다양한 API 요청을 정의할 수 있는 인터페이스
 interface AuthApiService {
     @POST("auth/signup")
-    suspend fun signUp(@Body request: SignUpRequest): Response<Unit> // 응답이 있다면 Unit 대신 적절한 데이터 클래스로 변경
+    suspend fun signUp(@Body request: SignUpRequest): Response<SignUpResponse>
+
+    @POST("auth/login")
+    suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
 }
