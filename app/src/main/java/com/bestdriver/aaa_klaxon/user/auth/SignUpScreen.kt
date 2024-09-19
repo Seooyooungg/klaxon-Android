@@ -14,20 +14,25 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.bestdriver.aaa_klaxon.R
 import com.bestdriver.aaa_klaxon.ui.theme.AAA_klaxonTheme
 import com.bestdriver.aaa_klaxon.ui.theme.MyPurple
 import com.bestdriver.aaa_klaxon.util.CustomTopAppBar
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.livedata.observeAsState
+import com.bestdriver.aaa_klaxon.network.RetrofitClient
 import com.bestdriver.aaa_klaxon.network.auth.SignUpViewModel
 
 @Composable
 fun SignUpScreen(
     navController: NavController,
-    viewModel: SignUpViewModel = viewModel(),
     modifier: Modifier = Modifier
 ) {
+    // Create an instance of AuthApiService manually
+    val authApiService = RetrofitClient.instance
+    // Create the SignUpViewModel manually by passing the AuthApiService instance
+    val viewModel = remember {
+        SignUpViewModel(authApiService)
+    }
+
     val email by viewModel.email.observeAsState("")
     val password by viewModel.password.observeAsState("")
     val nickname by viewModel.nickname.observeAsState("")
@@ -178,6 +183,7 @@ fun SignUpScreen(
         }
     }
 }
+
 
 @Preview(showBackground = true)
 @Composable

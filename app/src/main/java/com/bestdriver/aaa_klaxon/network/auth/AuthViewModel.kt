@@ -1,5 +1,6 @@
 package com.bestdriver.aaa_klaxon.network.auth
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -11,8 +12,7 @@ import retrofit2.HttpException
 import javax.inject.Inject
 
 
-@HiltViewModel
-class SignUpViewModel @Inject constructor(
+class SignUpViewModel(
     private val authApiService: AuthApiService
 ) : ViewModel() {
 
@@ -59,7 +59,8 @@ class SignUpViewModel @Inject constructor(
                     _dialogMessage.value = "회원가입에 실패했습니다: ${e.message()}"
                     _showDialog.value = true
                 } catch (e: Exception) {
-                    _dialogMessage.value = "알 수 없는 오류가 발생했습니다."
+                    Log.e("SignUp", "Unknown error occurred", e)  // 예외를 로그로 출력
+                    _dialogMessage.value = "알 수 없는 오류가 발생했습니다: ${e.localizedMessage}"
                     _showDialog.value = true
                 }
             }
