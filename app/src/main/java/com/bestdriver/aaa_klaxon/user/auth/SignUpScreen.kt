@@ -37,11 +37,10 @@ fun SignUpScreen(
     val password by viewModel.password.observeAsState("")
     val nickname by viewModel.nickname.observeAsState("")
     val car_number by viewModel.car_number.observeAsState("")
-    val phone_number by viewModel.phone_number.observeAsState("")
     val showDialog by viewModel.showDialog.observeAsState(false)
     val dialogMessage by viewModel.dialogMessage.observeAsState("")
 
-    val isFormValid = email.isNotEmpty() && password.isNotEmpty() && nickname.isNotEmpty() && car_number.isNotEmpty() && phone_number.isNotEmpty()
+    val isFormValid = email.isNotEmpty() && password.isNotEmpty() && nickname.isNotEmpty() && car_number.isNotEmpty()
 
     Scaffold(
         topBar = {
@@ -126,21 +125,6 @@ fun SignUpScreen(
                     .padding(vertical = 4.dp)
             )
 
-            // Phone Number Field
-            Text(
-                text = "휴대폰*",
-                fontSize = 13.sp,
-                modifier = Modifier.padding(top = 20.dp)
-            )
-            OutlinedTextField(
-                value = phone_number,
-                onValueChange = { viewModel.updatePhoneNumber(it) },
-                singleLine = true,
-                placeholder = { Text("- 없이 숫자만 입력해주세요,", fontSize = 15.sp) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp)
-            )
 
             Spacer(modifier = Modifier.height(16.dp))
 

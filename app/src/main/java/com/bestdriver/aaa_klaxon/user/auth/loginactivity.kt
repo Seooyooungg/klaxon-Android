@@ -1,5 +1,7 @@
 package com.bestdriver.aaa_klaxon.login
 
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -20,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bestdriver.aaa_klaxon.ui.theme.AAA_klaxonTheme
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -96,22 +99,23 @@ fun LoginScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 30.dp)
+                    .padding(bottom = 16.dp)
             ) {
-                Text(
-                    text = "클락션",
-                    fontSize = 45.sp,
-                    color = MyPurple,
-                    fontFamily = FontFamily(Font(R.font.pretendard_extrabold)),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                Image(
+                    painter = painterResource(id = R.drawable.logo),
+                    contentDescription = null,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
+                        .width(140.dp)
+                        .height(100.dp)// Adjust size as needed
                 )
                 Text(
-                    text = "Klaxon",
-                    fontSize = 35.sp,
+                    text = "K l a x o n",
+                    fontSize = 20.sp,
                     color = MyPurple,
                     fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = 2.dp)
                 )
             }
 
@@ -121,6 +125,7 @@ fun LoginScreen(
             OutlinedTextField(
                 value = username,
                 onValueChange = { username = it },
+                singleLine = true,
                 label = { Text("아이디", fontSize = 20.sp) },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -130,6 +135,7 @@ fun LoginScreen(
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
+                singleLine = true,
                 label = { Text("비밀번호", fontSize = 20.sp) },
                 modifier = Modifier
                     .fillMaxWidth()

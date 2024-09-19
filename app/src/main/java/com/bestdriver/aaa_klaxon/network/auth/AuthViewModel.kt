@@ -28,9 +28,6 @@ class SignUpViewModel(
     private val _car_number = MutableLiveData("")
     val car_number: LiveData<String> get() = _car_number
 
-    private val _phone_number = MutableLiveData("")
-    val phone_number: LiveData<String> get() = _phone_number
-
     private val _showDialog = MutableLiveData(false)
     val showDialog: LiveData<Boolean> get() = _showDialog
 
@@ -42,12 +39,11 @@ class SignUpViewModel(
         val password = _password.value.orEmpty()
         val nickname = _nickname.value.orEmpty()
         val car_number = _car_number.value.orEmpty()
-        val phone_number = _phone_number.value.orEmpty()
 
-        if (email.isNotEmpty() && password.isNotEmpty() && nickname.isNotEmpty() && car_number.isNotEmpty() && phone_number.isNotEmpty()) {
+        if (email.isNotEmpty() && password.isNotEmpty() && nickname.isNotEmpty() && car_number.isNotEmpty() ) {
             viewModelScope.launch {
                 try {
-                    val request = SignUpRequest(email, password, nickname, car_number, phone_number)
+                    val request = SignUpRequest(email, password, nickname, car_number)
                     val response = authApiService.signUp(request)
                     if (response.isSuccessful) {
                         navController.popBackStack()
@@ -84,10 +80,6 @@ class SignUpViewModel(
 
     fun updateCarNumber(newCarNumber: String) {
         _car_number.value = newCarNumber
-    }
-
-    fun updatePhoneNumber(newPhoneNumber: String) {
-        _phone_number.value = newPhoneNumber
     }
 
     fun updateDialogMessage(message: String) {
