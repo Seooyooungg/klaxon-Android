@@ -20,19 +20,13 @@ class AuthInterceptor(private val tokenManager: TokenManager) : Interceptor {
         val newRequest = request.newBuilder().apply {
             if (!accessToken.isNullOrEmpty()) {
                 addHeader("Authorization", "$accessToken")
-                Log.d("AuthInterceptor", "Access Token: $accessToken")
             }
         }.build()
-
-        // 로그 추가
-        Log.d("AuthInterceptor", "Request URL: ${request.url}")
-        Log.d("AuthInterceptor", "Authorization Header: Bearer $accessToken")
 
 
         // 응답 로깅을 위한 처리
         val response = chain.proceed(newRequest)
-        Log.d("AuthInterceptor", "Response Code: ${response.code}")
-        Log.d("AuthInterceptor", "Response Message: ${response.message}")
+
 
         // 응답 바디를 로그로 출력 (주의: 응답 바디를 두 번 읽을 수 없으므로 필요시 클론을 사용)
         val responseBody = response.peekBody(Long.MAX_VALUE)

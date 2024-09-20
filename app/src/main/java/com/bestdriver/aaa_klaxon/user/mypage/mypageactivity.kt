@@ -57,12 +57,6 @@ fun MyPageScreen(navController: NavController, modifier: Modifier = Modifier) {
         try {
             val response = mypageApiService.getUserInfo()
 
-            // 요청과 응답 로깅
-            Log.d("MyPage", "Request URL: ${response.raw().request.url}")
-            Log.d("MyPage", "Request Headers: ${response.raw().request.headers}")
-            Log.d("MyPage", "Response Code: ${response.code()}")
-            Log.d("MyPage", "Response Message: ${response.message()}")
-
             if (response.isSuccessful) {
                 response.body()?.let { userInfoResponse ->
                     userName = userInfoResponse.result.nickname
@@ -110,7 +104,7 @@ fun MyPageScreen(navController: NavController, modifier: Modifier = Modifier) {
             ) {
                 Box(
                     modifier = Modifier
-                        .size(95.dp)
+                        .size(80.dp)
                         .clip(RoundedCornerShape(50.dp))
                         .background(Color.Gray),
                     contentAlignment = Alignment.Center

@@ -135,6 +135,35 @@ fun ProfileEditScreen(navController: NavController, modifier: Modifier = Modifie
             }
 
             Text(
+                text = "차번호",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color.Black,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp)
+                    .padding(bottom = 5.dp)
+                    .align(Alignment.Start)
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp)
+                    .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
+            ) {
+                Text(
+                    text = "server_provided_email@example.com", // 서버에서 제공된 이메일
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.Gray,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp) // 패딩을 통해 텍스트와 테두리 사이의 공간 확보
+                )
+            }
+
+            Text(
                 text = "닉네임*",
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Medium,
