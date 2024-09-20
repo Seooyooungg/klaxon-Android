@@ -16,15 +16,18 @@ class AuthInterceptor(private val tokenManager: TokenManager) : Interceptor {
 
         // 액세스 토큰을 추가할 요청
         val accessToken = tokenManager.getToken()
+        Log.d("AuthInterceptor", "Access Token: $accessToken") // 추가된 로그
         val newRequest = request.newBuilder().apply {
             if (!accessToken.isNullOrEmpty()) {
-                addHeader("Authorization", "Bearer $accessToken")
+                addHeader("Authorization", "$accessToken")
+                Log.d("AuthInterceptor", "Access Token: $accessToken")
             }
         }.build()
 
         // 로그 추가
         Log.d("AuthInterceptor", "Request URL: ${request.url}")
-        Log.d("AuthInterceptor", "Request Headers: ${newRequest.headers}")
+        Log.d("AuthInterceptor", "Authorization Header: Bearer $accessToken")
+
 
         // 응답 로깅을 위한 처리
         val response = chain.proceed(newRequest)
