@@ -31,3 +31,9 @@ data class LogoutResponse(
     val code: Int,
     val message: String
 )
+
+data class DeleteAccountResponse(
+    val isSuccess: Boolean,
+    val code: Int,
+    val message: String
+)

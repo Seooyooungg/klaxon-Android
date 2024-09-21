@@ -183,7 +183,7 @@ fun MyPageScreen(navController: NavController, modifier: Modifier = Modifier) {
                 Spacer(modifier = Modifier.height(15.dp))
 
                 MenuItem(
-                    text = "오분류 신고내역",
+                    text = "오분류 내역",
                     onClick = { navController.navigate("reportHistory") }
                 )
 
