@@ -16,3 +16,14 @@ data class LoginResponse(
 data class LoginResult(
     val refreshToken: String
 )
+
+data class RefreshTokenResponse(
+    val isSuccess: Boolean,
+    val code: Int,
+    val message: String,
+    val result: AuthResult
+)
+
+data class AuthResult(
+    val refreshToken: String
+)

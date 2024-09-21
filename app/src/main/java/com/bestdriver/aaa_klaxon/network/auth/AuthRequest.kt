@@ -11,3 +11,8 @@ data class LoginRequest(
     val email: String,
     val password: String
 )
+
+data class RefreshTokenRequest(
+    val refreshToken: String
+)
+
