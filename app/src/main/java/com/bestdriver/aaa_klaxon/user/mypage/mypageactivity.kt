@@ -46,8 +46,8 @@ class MyPageActivity : ComponentActivity() {
 @Composable
 fun MyPageScreen(navController: NavController, modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    var userName by remember { mutableStateOf("User Name") }
-    var carNumber by remember { mutableStateOf("Car Number") }
+    var nickname by remember { mutableStateOf("nickname") }
+    var carNumber by remember { mutableStateOf("CarNumber") }
     var showLogoutDialog by remember { mutableStateOf(false) }
 
     // 사용자 정보 불러오기 로직 추가 (코루틴 사용)
@@ -59,7 +59,7 @@ fun MyPageScreen(navController: NavController, modifier: Modifier = Modifier) {
 
             if (response.isSuccessful) {
                 response.body()?.let { userInfoResponse ->
-                    userName = userInfoResponse.result.nickname
+                    nickname = userInfoResponse.result.nickname
                     carNumber = userInfoResponse.result.car_number
                     Log.d("MyPage", "User Info: ${userInfoResponse.result.nickname}, ${userInfoResponse.result.car_number}")
                 }
@@ -119,7 +119,7 @@ fun MyPageScreen(navController: NavController, modifier: Modifier = Modifier) {
                     horizontalAlignment = Alignment.Start
                 ) {
                     Text(
-                        text = userName,
+                        text = nickname,
                         fontSize = 23.sp,
                         fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
                         color = Color.Black,
