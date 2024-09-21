@@ -15,4 +15,7 @@ interface MypageApiService {
     suspend fun updateNickname(
         @Body request: NicknameUpdateRequest
     ): Response<NicknameUpdateResponse>
+
+    @POST("users/logout")
+    suspend fun logout(): Response<LogoutResponse>
 }

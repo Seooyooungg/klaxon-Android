@@ -1,5 +1,6 @@
 package com.bestdriver.aaa_klaxon.mypage
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -30,6 +31,8 @@ import com.bestdriver.aaa_klaxon.network.RetrofitClient
 import com.bestdriver.aaa_klaxon.network.TokenManager
 import com.bestdriver.aaa_klaxon.ui.theme.AAA_klaxonTheme
 import com.bestdriver.aaa_klaxon.ui.theme.MyPurple
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class MyPageActivity : ComponentActivity() {
@@ -49,6 +52,7 @@ fun MyPageScreen(navController: NavController, modifier: Modifier = Modifier) {
     var nickname by remember { mutableStateOf("nickname") }
     var carNumber by remember { mutableStateOf("CarNumber") }
     var showLogoutDialog by remember { mutableStateOf(false) }
+    var isLoggedOut by remember { mutableStateOf(false) }
 
     // 사용자 정보 불러오기 로직 추가 (코루틴 사용)
     LaunchedEffect(Unit) {
@@ -61,7 +65,6 @@ fun MyPageScreen(navController: NavController, modifier: Modifier = Modifier) {
                 response.body()?.let { userInfoResponse ->
                     nickname = userInfoResponse.result.nickname
                     carNumber = userInfoResponse.result.car_number
-                    Log.d("MyPage", "User Info: ${userInfoResponse.result.nickname}, ${userInfoResponse.result.car_number}")
                 }
             } else {
                 Log.e("MyPage", "Error: ${response.code()}, ${response.message()}")
@@ -70,8 +73,6 @@ fun MyPageScreen(navController: NavController, modifier: Modifier = Modifier) {
             Log.e("MyPage", "Exception: ${e.message}")
         }
     }
-
-
 
     LazyColumn(
         modifier = modifier
@@ -243,8 +244,11 @@ fun MyPageScreen(navController: NavController, modifier: Modifier = Modifier) {
             text = { Text("로그아웃 하시겠습니까?") },
             confirmButton = {
                 TextButton(onClick = {
-                    navController.navigate("login")
-                    showLogoutDialog = false
+                    // 여기에서 로그아웃 요청
+                    logoutUser(context) {
+                        isLoggedOut = true
+                        showLogoutDialog = false
+                    }
                 }) {
                     Text("확인")
                 }
@@ -255,6 +259,34 @@ fun MyPageScreen(navController: NavController, modifier: Modifier = Modifier) {
                 }
             }
         )
+    }
+
+
+    if (isLoggedOut) {
+        // 로그아웃 성공 시 내비게이션 처리
+        LaunchedEffect(Unit) {
+            navController.navigate("login") {
+                popUpTo("myPage") { inclusive = true }
+            }
+        }
+    }
+}
+
+// 로그아웃 요청을 처리하는 함수
+private fun logoutUser(context: Context, onLogoutSuccess: () -> Unit) {
+    val mypageApiService = RetrofitClient.getMypageApiService(context)
+    CoroutineScope(Dispatchers.IO).launch {
+        try {
+            val response = mypageApiService.logout()
+            if (response.isSuccessful) {
+                TokenManager(context).clearToken() // 토큰 제거
+                onLogoutSuccess() // 로그아웃 성공 시 콜백 호출
+            } else {
+                Log.e("MyPage", "Logout failed: ${response.code()}")
+            }
+        } catch (e: Exception) {
+            Log.e("MyPage", "Logout Exception: ${e.message}")
+        }
     }
 }
 
@@ -283,3 +315,4 @@ fun PreviewMyPageScreen() {
         MyPageScreen(navController = rememberNavController())
     }
 }
+

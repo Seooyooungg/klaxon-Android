@@ -25,3 +25,9 @@ data class NicknameUpdateResult(
     val userId: Int,
     val newNickname: String
 )
+
+data class LogoutResponse(
+    val isSuccess: Boolean,
+    val code: Int,
+    val message: String
+)

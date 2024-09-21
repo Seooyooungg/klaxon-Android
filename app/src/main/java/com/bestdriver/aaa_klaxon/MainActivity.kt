@@ -173,7 +173,7 @@ fun AppNavGraph(
 ) {
     NavHost(
         navController = navController,
-        startDestination = "main",
+        startDestination = "login",
         Modifier.then(modifier)
     ) {
         composable("login") {
