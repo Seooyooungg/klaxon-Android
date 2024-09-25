@@ -1,9 +1,7 @@
 package com.bestdriver.aaa_klaxon.mypage
 
 import android.content.Intent
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
+import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -20,42 +18,67 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bestdriver.aaa_klaxon.ui.theme.AAA_klaxonTheme
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.bestdriver.aaa_klaxon.R
+import com.bestdriver.aaa_klaxon.network.RetrofitClient
+import com.bestdriver.aaa_klaxon.network.mypage.MypageApiService
+import com.bestdriver.aaa_klaxon.ui.theme.MyPurple
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+data class NicknameUpdateRequest(val nickname: String)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileEditScreen(navController: NavController, modifier: Modifier = Modifier) {
     var nickname by remember { mutableStateOf("") }
-    val nicknameHasChanged = nickname.isNotEmpty()
-
+    var serverNickname by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("email") }
+    var carNumber by remember { mutableStateOf("CarNumber") }
+    var updateMessage by remember { mutableStateOf("") } // 추가: 업데이트 메시지 상태
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
+
+    val mypageApiService = RetrofitClient.getMypageApiService(context)
+
+    // 사용자 정보 가져오기
+    LaunchedEffect(Unit) {
+        try {
+            val response = mypageApiService.getUserInfo()
+            if (response.isSuccessful) {
+                response.body()?.let { userInfoResponse ->
+                    serverNickname = userInfoResponse.result.nickname
+                    carNumber = userInfoResponse.result.car_number
+                    email = userInfoResponse.result.email
+                }
+            } else {
+                Log.e("MyPage", "Error: ${response.code()}, ${response.message()}")
+            }
+        } catch (e: Exception) {
+            Log.e("MyPage", "Exception: ${e.message}")
+        }
+    }
 
     Column(
         modifier = Modifier
             .padding(16.dp)
-            .padding(top = 20.dp)
-            .fillMaxWidth()
-            .fillMaxHeight()
+            .fillMaxSize()
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 20.dp)
-                .padding(bottom = 50.dp),
+                .padding(top = 20.dp, bottom = 50.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
@@ -63,7 +86,7 @@ fun ProfileEditScreen(navController: NavController, modifier: Modifier = Modifie
                 contentDescription = "Back",
                 modifier = Modifier
                     .size(40.dp)
-                    .clickable { navController.navigate("mypage") }, // 뒤로가기 클릭 시 mypage로 이동
+                    .clickable { navController.navigate("mypage") },
                 tint = Color.Black
             )
             Text(
@@ -77,27 +100,22 @@ fun ProfileEditScreen(navController: NavController, modifier: Modifier = Modifie
             )
         }
 
-
         Column(
             modifier = modifier
                 .fillMaxSize()
-                .padding(16.dp)
                 .clickable {
-                    // 빈 배경 클릭 시 키보드 숨기기
                     focusManager.clearFocus()
                 },
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // CircleWithCross 컴포저블
             CircleWithCross(modifier = Modifier.clickable {
-                // 동그라미 클릭 시 갤러리 열기
                 val intent = Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
                 context.startActivity(intent)
             })
 
             Text(
-                text = "김덕우",
+                text = serverNickname,
                 fontSize = 25.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = Color.Black,
@@ -116,7 +134,6 @@ fun ProfileEditScreen(navController: NavController, modifier: Modifier = Modifie
                     .align(Alignment.Start)
             )
 
-            // 이메일 표시 (읽기 전용), 테두리 추가
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -124,13 +141,42 @@ fun ProfileEditScreen(navController: NavController, modifier: Modifier = Modifie
                     .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
             ) {
                 Text(
-                    text = "server_provided_email@example.com", // 서버에서 제공된 이메일
+                    text = email,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Medium,
                     color = Color.Gray,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(12.dp) // 패딩을 통해 텍스트와 테두리 사이의 공간 확보
+                        .padding(12.dp)
+                )
+            }
+
+            Text(
+                text = "차번호",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color.Black,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp)
+                    .padding(bottom = 5.dp)
+                    .align(Alignment.Start)
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp)
+                    .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
+            ) {
+                Text(
+                    text = carNumber,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.Gray,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp)
                 )
             }
 
@@ -146,7 +192,6 @@ fun ProfileEditScreen(navController: NavController, modifier: Modifier = Modifie
                     .align(Alignment.Start)
             )
 
-            // 닉네임 입력 필드
             OutlinedTextField(
                 value = nickname,
                 onValueChange = { nickname = it },
@@ -155,28 +200,111 @@ fun ProfileEditScreen(navController: NavController, modifier: Modifier = Modifie
                     .padding(bottom = 8.dp),
             )
 
+            // 409 에러 메시지 표시
+            if (updateMessage == "이미 존재하는 사용자입니다.") {
+                Text(
+                    text = updateMessage,
+                    color = MyPurple,
+                    fontSize = 16.sp,
+                    modifier = Modifier.align(Alignment.Start) // 왼쪽 정렬
+                )
+            }
+
             Spacer(modifier = Modifier.weight(1f))
 
             Button(
                 onClick = {
-                    // 프로필 수정 로직 추가
-                    // 여기에 닉네임 변경 로직 추가
+                    if (nickname.isNotEmpty()) {
+                        val nicknameUpdateRequest = NicknameUpdateRequest(nickname = nickname)
+                        updateNickname(mypageApiService, nicknameUpdateRequest, navController, { message ->
+                            updateMessage = message
+                        }, {
+                            nickname = ""
+                        })
+                    }
                 },
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
                     .padding(top = 16.dp)
                     .padding(bottom = 50.dp),
-                enabled = nicknameHasChanged,
+                enabled = nickname.isNotEmpty(),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (nicknameHasChanged) Color(0xFF321D87) else Color.Gray
+                    containerColor = if (nickname.isNotEmpty()) Color(0xFF321D87) else Color.Gray
                 ),
                 shape = RoundedCornerShape(5.dp)
             ) {
                 Text("수정 완료", fontSize = 20.sp, color = Color.White)
             }
+
+
+            // 업데이트 메시지 표시
+            if (updateMessage.isNotEmpty() && updateMessage != "이미 존재하는 사용자입니다.") {
+                Text(
+                    text = updateMessage,
+                    color = MyPurple,
+                    fontSize = 16.sp,
+                    modifier = Modifier.align(Alignment.Start) // 왼쪽 정렬
+                )
+            }
         }
     }
 }
+
+private fun updateNickname(
+    mypageApiService: MypageApiService,
+    request: NicknameUpdateRequest,
+    navController: NavController,
+    onUpdateMessage: (String) -> Unit,
+    onNicknameCleared: () -> Unit
+) {
+    CoroutineScope(Dispatchers.IO).launch {
+        try {
+            Log.d("MyPage", "Request: $request")
+            val response = mypageApiService.updateNickname(request)
+            Log.d("MyPage", "Response Code: ${response.code()}, Response Message: ${response.message()}")
+
+            if (response.isSuccessful) {
+                // 성공 시 화면 전환만 수행
+                withContext(Dispatchers.Main) {
+                    navController.navigate("mypage")
+                }
+            } else {
+                val errorBody = response.errorBody()?.string()
+                Log.e("MyPage", "닉네임 변경 오류: ${response.code()}, ${response.message()}, Error Body: $errorBody")
+
+                // 409 에러 처리
+                if (response.code() == 409) {
+                    withContext(Dispatchers.Main) {
+                        // 닉네임 필드 비우기
+                        onNicknameCleared()
+                        onUpdateMessage("이미 존재하는 사용자입니다.")
+                    }
+
+                    kotlinx.coroutines.delay(600)
+
+                    // 화면을 초기화
+                    withContext(Dispatchers.Main) {
+                        onUpdateMessage("") // 메시지 지우기
+                    }
+                    return@launch // 더 이상 처리하지 않음
+                } else {
+                    val errorMessage = "닉네임 변경 오류: ${response.message()}"
+                    withContext(Dispatchers.Main) {
+                        onUpdateMessage(errorMessage)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("MyPage", "닉네임 변경 중 예외 발생: ${e.message}")
+            withContext(Dispatchers.Main) {
+                onUpdateMessage("닉네임 변경 중 오류가 발생했습니다.")
+            }
+        }
+    }
+}
+
+
+
 
 @Composable
 fun CircleWithCross(

@@ -18,6 +18,7 @@ import com.bestdriver.aaa_klaxon.ui.theme.AAA_klaxonTheme
 import com.bestdriver.aaa_klaxon.ui.theme.MyPurple
 import com.bestdriver.aaa_klaxon.util.CustomTopAppBar
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.platform.LocalContext
 import com.bestdriver.aaa_klaxon.network.RetrofitClient
 import com.bestdriver.aaa_klaxon.network.auth.SignUpViewModel
 
@@ -26,9 +27,9 @@ fun SignUpScreen(
     navController: NavController,
     modifier: Modifier = Modifier
 ) {
-    // Create an instance of AuthApiService manually
-    val authApiService = RetrofitClient.instance
-    // Create the SignUpViewModel manually by passing the AuthApiService instance
+    // Get AuthApiService instance with context
+    val context = LocalContext.current
+    val authApiService = RetrofitClient.getAuthApiService(context)
     val viewModel = remember {
         SignUpViewModel(authApiService)
     }
@@ -125,7 +126,6 @@ fun SignUpScreen(
                     .padding(vertical = 4.dp)
             )
 
-
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
@@ -167,7 +167,6 @@ fun SignUpScreen(
         }
     }
 }
-
 
 @Preview(showBackground = true)
 @Composable
