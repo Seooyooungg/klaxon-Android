@@ -59,16 +59,21 @@ data class CommentRequest(
     val text: String
 )
 
-data class CommentResponse(
-    val isSuccess: Boolean,
-    val code: Int,
-    val message: String,
-    val result: CommentResult? // null일 수 있는 경우에 대한 처리 필요
-) {
-    override fun toString(): String {
-        return "CommentResponse(isSuccess=$isSuccess, code=$code, message='$message', result=$result)"
-    }
-}
+// CommentResponse를 ApiResponse의 형태로 변경
+typealias CommentResponse = ApiResponse<CommentResult>
+typealias CommentsResponse = ApiResponse<List<CommentResult>>
+
+//data class CommentResponse(
+//    val isSuccess: Boolean,
+//    val code: Int,
+//    val message: String,
+//    val result: List<CommentResult>? // 배열로 수정
+//) {
+//    override fun toString(): String {
+//        return "CommentResponse(isSuccess=$isSuccess, code=$code, message='$message', result=$result)"
+//    }
+//}
+
 
 data class CommentResult(
     val comment_id: Int,

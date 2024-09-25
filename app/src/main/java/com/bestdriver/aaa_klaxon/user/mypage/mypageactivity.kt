@@ -54,6 +54,8 @@ fun MyPageScreen(navController: NavController, modifier: Modifier = Modifier) {
     var showLogoutDialog by remember { mutableStateOf(false) }
     var isLoggedOut by remember { mutableStateOf(false) }
 
+
+
     // 사용자 정보 불러오기 로직 추가 (코루틴 사용)
     LaunchedEffect(Unit) {
         val mypageApiService = RetrofitClient.getMypageApiService(context)

@@ -47,14 +47,15 @@ class CommunityWriteScreenViewModel : ViewModel() {
                                 post_id = postResult.post_id,
                                 user_id = postResult.user_id,
                                 nickname = postResult.nickname,
-                                title = postResult.title,
-                                main_text = postResult.main_text,
+                                title = postResult.title ?: "",
+                                main_text = postResult.main_text ?: "" ,
                                 createdAt = postResult.createdAt,
                                 like_count = postResult.like_count,
                                 comment_count = postResult.comment_count
                             )
                         }
                     } ?: run {
+                        Log.d("CommunityViewModel", "No posts found")
                         _posts.value = emptyList()
                     }
                 } else {
@@ -95,6 +96,13 @@ class CommunityWriteScreenViewModel : ViewModel() {
 
     suspend fun addPost(title: String, body: String, nickname: String): Int? {
         var newPostId: Int? = null
+
+        // 입력 검증: 제목과 본문이 빈 문자열인지 확인
+        if (title.isBlank() || body.isBlank()) {
+            Log.e("CommunityViewModel", "제목이나 본문이 비어있습니다.")
+            return null // 또는 사용자에게 오류 메시지 제공
+        }
+
         try {
             val postRequest = PostRequest(
                 title = title,
@@ -137,6 +145,7 @@ class CommunityWriteScreenViewModel : ViewModel() {
     }
 
 
+
     fun updateLikeCount(postId: Int, increment: Boolean) {
         _posts.update { currentPosts ->
             currentPosts.map { post ->
@@ -149,30 +158,42 @@ class CommunityWriteScreenViewModel : ViewModel() {
         }
     }
 
-    suspend fun addComment(postId: String, comment: Comment) {
+    suspend fun addComment(postId: Int, comment: Comment) {
         try {
+            // 요청 본체 생성
             val request = CommentRequest(text = comment.body)
+            Log.d("CommunityViewModel", "CommentRequest: $request")
 
-            val response = apiService.addComment(token, postId.toInt(), request)
+            // API 호출
+            val response = apiService.addComment(token, postId, request)
 
-            if (response.isSuccessful && response.body()?.isSuccess == true) {
-                val result = response.body()?.result
+            // 성공적인 응답 처리
+            if (response.isSuccessful) {
+                val commentResponse = response.body()
 
-                result?.let {
-                    val newComment = Comment(
-                        userName = it.user_id.toString(),
-                        body = it.text,
-                        date = it.createdAt.split("T")[0],
-                        time = it.createdAt.split("T")[1].split("Z")[0]
-                    )
+                // 서버에서 받은 응답 검증
+                if (commentResponse != null && commentResponse.isSuccess) {
+                    val result = commentResponse.result
 
-                    _comments.update { currentComments ->
-                        val postComments = currentComments[postId.toInt()]?.toMutableList() ?: mutableListOf()
-                        postComments.add(newComment)
-                        currentComments + (postId.toInt() to postComments)
+                    result?.let {
+                        val newComment = Comment(
+                            userName = it.user_id.toString(),
+                            body = it.text,
+                            date = it.createdAt.split("T")[0],
+                            time = it.createdAt.split("T")[1].split("Z")[0]
+                        )
+
+                        // 댓글 업데이트
+                        _comments.update { currentComments ->
+                            val postComments = currentComments[postId]?.toMutableList() ?: mutableListOf()
+                            postComments.add(newComment)
+                            currentComments + (postId to postComments) // 기존 댓글 목록 유지
+                        }
+                    } ?: run {
+                        Log.e("CommunityViewModel", "Result is null")
                     }
-                } ?: run {
-                    Log.e("CommunityViewModel", "Result is null")
+                } else {
+                    Log.e("CommunityViewModel", "Error adding comment: ${commentResponse?.code} - ${commentResponse?.message}")
                 }
             } else {
                 Log.e("CommunityViewModel", "Error adding comment: ${response.code()} - ${response.message()}")
@@ -182,23 +203,36 @@ class CommunityWriteScreenViewModel : ViewModel() {
         }
     }
 
+
     suspend fun fetchCommentsForPost(token: String, postId: Int) {
         try {
             val response = apiService.getCommentsByPostId(token, postId)
-            if (response.isSuccessful && response.body()?.isSuccess == true) {
-                response.body()?.result?.let { result ->
-                    val commentsList = (result as? List<CommentResult>)?.map {
-                        Comment(
-                            userName = it.nickname,
-                            body = it.text,
-                            date = it.createdAt.split("T")[0],
-                            time = it.createdAt.split("T")[1].split("Z")[0]
-                        )
-                    } ?: emptyList()
 
-                    _comments.update { currentComments ->
-                        currentComments + (postId to commentsList)
+            // 응답이 성공적이고, isSuccess가 true인 경우
+            if (response.isSuccessful) {
+                val commentsResponse = response.body() as? CommentsResponse
+                if (commentsResponse != null && commentsResponse.isSuccess) {
+                    commentsResponse.result?.let { result ->
+                        // result가 List<CommentResult>인 경우
+                        val commentsList = result.map {
+                            Comment(
+                                userName = it.nickname,
+                                body = it.text,
+                                date = it.createdAt.split("T")[0],
+                                time = it.createdAt.split("T")[1].split("Z")[0]
+                            )
+                        }
+
+                        // 댓글 목록 업데이트
+                        _comments.update { currentComments ->
+                            currentComments + (postId to commentsList)
+                        }
+                    } ?: run {
+                        // result가 null인 경우 처리
+                        Log.e("CommunityViewModel", "Comments result is null")
                     }
+                } else {
+                    Log.e("CommunityViewModel", "Error fetching comments: ${commentsResponse?.code} - ${commentsResponse?.message}")
                 }
             } else {
                 Log.e("CommunityViewModel", "Error fetching comments: ${response.code()} - ${response.message()}")
@@ -207,6 +241,9 @@ class CommunityWriteScreenViewModel : ViewModel() {
             Log.e("CommunityViewModel", "Exception fetching comments: ${e.localizedMessage}")
         }
     }
+
+
+
 
     fun getCommentsForPost(postId: Int): List<Comment> {
         return _comments.value[postId] ?: emptyList()

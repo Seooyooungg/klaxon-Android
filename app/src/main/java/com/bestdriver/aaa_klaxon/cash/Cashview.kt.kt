@@ -34,63 +34,33 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.bestdriver.aaa_klaxon.R
+import com.bestdriver.aaa_klaxon.util.CustomTopAppBar
+
 @Composable
 fun CashScreen(navController: NavController) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        // 상단 바
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 40.dp)
-                .height(56.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-
-            // 제목 텍스트
-           Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp), // Row의 높이에 맞추기
-               verticalAlignment = Alignment.CenterVertically
-            ) {
-               // 뒤로가기 아이콘
-               Icon(
-                   imageVector = Icons.Default.ArrowBack,
-                   contentDescription = "Back",
-                   modifier = Modifier
-                       .size(40.dp)
-                       .clickable { navController.navigateUp() }, // 뒤로가기 클릭 시 이전 페이지로 이동
-                   tint = Color.Black
-               )
-
-                Text(
-                    text = "적립내역",
-                    fontSize = 32.sp,
-                    fontFamily = FontFamily(Font(R.font.pretendard_extrabold)),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 90.dp)
-                )
-            }
+    Scaffold(
+        topBar = {
+            CustomTopAppBar(
+                navController = navController,
+                pageTitle = "적립내역",
+                onNavigationIconClick = { navController.navigateUp() }
+            )
         }
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // 나머지 콘텐츠
+    ) { paddingValues -> // Scaffold에서 제공하는 paddingValues 사용
         Column(
             modifier = Modifier
+                .padding(paddingValues) // topBar에 의해 생기는 padding 처리
+                .padding(16.dp)
                 .fillMaxSize()
-                .padding(top = 16.dp)
         ) {
+            // 나머지 콘텐츠
             CashDetails()
             Spacer(modifier = Modifier.height(16.dp))
             CashHistory()
         }
     }
 }
+
 
 @Composable
 fun CashDetails() {

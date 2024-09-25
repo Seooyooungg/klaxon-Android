@@ -47,6 +47,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.bestdriver.aaa_klaxon.cash.CashScreen
@@ -65,6 +66,8 @@ import com.bestdriver.aaa_klaxon.network.community.CommunityWriteScreenViewModel
 import com.bestdriver.aaa_klaxon.ui.theme.AAA_klaxonTheme
 import com.bestdriver.aaa_klaxon.user.mypage.NoticeHomeScreen
 import com.bestdriver.aaa_klaxon.user.mypage.NoticeLetterScreen
+import com.bestdriver.aaa_klaxon.util.BottomNavigationItem
+import com.bestdriver.aaa_klaxon.util.CustomBottomBar
 import com.bestdriver.aaa_klaxon.viewmodel.NoticeViewModel
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -72,12 +75,12 @@ import java.util.UUID
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge() // 이 메소드는 앱의 UI가 화면의 끝까지 확장되도록 설정하는 사용자 정의 메소드입니다.
+        enableEdgeToEdge()
         setContent {
             AAA_klaxonTheme {
                 val navController = rememberNavController()
-                val communityViewModel: CommunityWriteScreenViewModel = viewModel() // CommunityViewModel 초기화
-                val noticeViewModel: NoticeViewModel = viewModel() // NoticeViewModel 초기화
+                val communityViewModel: CommunityWriteScreenViewModel = viewModel()
+                val noticeViewModel: NoticeViewModel = viewModel()
 
                 val items = listOf(
                     BottomNavigationItem(
@@ -103,52 +106,28 @@ class MainActivity : ComponentActivity() {
                     )
                 )
 
-                var selectedItemIndex by rememberSaveable {
-                    mutableStateOf(1) // 기본적으로 "홈" 탭을 선택 상태로 설정
-                }
+                var selectedItemIndex by rememberSaveable { mutableStateOf(1) }
 
                 Scaffold(
                     bottomBar = {
-                        NavigationBar {
-                            items.forEachIndexed { index, item ->
-                                NavigationBarItem(
-                                    selected = selectedItemIndex == index,
-                                    onClick = {
-                                        selectedItemIndex = index
-                                        navController.navigate(item.route) {
-                                            // 필요한 경우 추가 설정
-                                            launchSingleTop = true
-                                        }
-                                    },
-                                    label = {
-                                        Text(text = item.title)
-                                    },
-                                    icon = {
-                                        BadgedBox(
-                                            badge = {
-                                                if (item.hasNews) {
-                                                    Badge()
-                                                }
-                                            }
-                                        ) {
-                                            Icon(
-                                                imageVector = if (index == selectedItemIndex) {
-                                                    item.selectedIcon
-                                                } else item.unselectedIcon,
-                                                contentDescription = item.title,
-                                                modifier = Modifier.size(25.dp)
-                                            )
-                                        }
-                                    }
-                                )
-                            }
+                        // 현재 화면이 login, signup, communityWrite가 아닌지 확인
+                        val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
+                        if (currentRoute in listOf("communityHome", "main", "myPage")) {
+                            CustomBottomBar(
+                                navController = navController,
+                                items = items,
+                                selectedItemIndex = selectedItemIndex,
+                                onItemSelected = { index ->
+                                    selectedItemIndex = index
+                                }
+                            )
                         }
                     }
                 ) { innerPadding ->
                     AppNavGraph(
                         navController = navController,
                         communityViewModel = communityViewModel,
-                        noticeViewModel = noticeViewModel, // 추가된 부분
+                        noticeViewModel = noticeViewModel,
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
@@ -157,14 +136,8 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-// 데이터 클래스 정의
-data class BottomNavigationItem(
-    val title: String,
-    val selectedIcon: ImageVector,
-    val unselectedIcon: ImageVector,
-    val hasNews: Boolean,
-    val route: String
-)
+
+
 
 @Composable
 fun AppNavGraph(
@@ -221,8 +194,15 @@ fun AppNavGraph(
         }
 
         composable(
-            route = "communityFeed/{postId}",
-            arguments = listOf(navArgument("postId") { type = NavType.IntType })
+            route = "communityFeed/{postId}/{title}/{mainText}/{createdAt}/{likeCount}/{nickname}",
+            arguments = listOf(
+                navArgument("postId") { type = NavType.IntType },
+                navArgument("title") { type = NavType.StringType },
+                navArgument("mainText") { type = NavType.StringType },
+                navArgument("createdAt") { type = NavType.StringType },
+                navArgument("likeCount") { type = NavType.StringType },
+                navArgument("nickname") { type = NavType.StringType }
+            )
         ) { backStackEntry ->
             val postId = backStackEntry.arguments?.getInt("postId")
 
@@ -230,15 +210,14 @@ fun AppNavGraph(
                 CommunityFeedScreen(
                     navController = navController,
                     viewModel = communityViewModel,
-                    postId = postId // 필수 매개변수
+                    postId = postId
                 )
             } else {
-                // postId가 null일 경우 처리 (예: 오류 화면)
-                // 예를 들어, 네비게이션을 통한 오류 처리 화면으로 이동할 수 있음
-                navController.navigate("errorScreen") // 오류 화면으로 이동
+                // 오류 화면으로 이동
+                navController.navigate("errorScreen")
+                navController.popBackStack() // 이전 화면으로 돌아가게 함
             }
         }
-
 
         composable("myPage") {
             MyPageScreen(navController)

@@ -84,10 +84,11 @@ fun CommunityFeedScreen(
 
     LaunchedEffect(postId) {
         viewModel.fetchPostById(token, postId)
-        viewModel.fetchCommentsForPost(token, postId) // 댓글도 가져옵니다.
+        viewModel.fetchCommentsForPost(token, postId)
     }
 
     val post by viewModel.selectedPost.collectAsState()
+    val comments by viewModel.comments.collectAsState()
 
     Column(
         modifier = Modifier
@@ -111,7 +112,6 @@ fun CommunityFeedScreen(
             )
 
             Spacer(modifier = Modifier.height(16.dp))
-            val comments by viewModel.comments.collectAsState()
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -121,12 +121,14 @@ fun CommunityFeedScreen(
                     CommentItem(comment)
                 }
             }
-            CommentSection(viewModel, validPost.post_id.toString()) // 댓글 입력란 추가
+            CommentSection(viewModel, validPost.post_id)
         } ?: run {
             Text("게시글을 불러오는 중입니다...")
         }
     }
 }
+
+
 
 
 
@@ -307,7 +309,7 @@ fun CommentItem(comment: Comment) {
 
 
 @Composable
-fun CommentSection(viewModel: CommunityWriteScreenViewModel, postId: String) {
+fun CommentSection(viewModel: CommunityWriteScreenViewModel, postId: Int) {
     val commentText = remember { mutableStateOf("") }
     val coroutineScope = rememberCoroutineScope() // Coroutine scope 생성
 

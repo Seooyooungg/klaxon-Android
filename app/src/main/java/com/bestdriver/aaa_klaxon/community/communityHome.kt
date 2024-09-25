@@ -68,51 +68,35 @@ fun CommunityScreen(
     val posts by viewModel.posts.collectAsState()
     val mostLikedPost by remember { derivedStateOf { viewModel.getMostLikedPost() } }
 
-    // CommunityScreen에 들어올 때마다 fetchPosts() 호출
     LaunchedEffect(Unit) {
         viewModel.fetchPosts()
     }
 
-    // 필터링된 게시글 목록
     val filteredPosts = posts.filter {
-        it.title != null || it.main_text != null // 하나라도 있을 경우 포함
+        it.title != null || it.main_text != null
     }
 
-
-    // 필터링된 게시글 로그 출력
     Log.d("CommunityScreen", "Filtered posts: $filteredPosts")
-
-    // 전체 게시글 로그 출력
     Log.d("CommunityScreen", "All posts: $posts")
 
-    // 새 게시글 ID가 변경될 때마다 네비게이션을 수행
     LaunchedEffect(newPostId) {
         newPostId?.let { postId ->
             posts.find { it.post_id == postId }?.let { post ->
-                navController.navigate("communityFeed/${Uri.encode(post.post_id.toString())}/${Uri.encode(post.title)}/${Uri.encode(post.main_text)}/${Uri.encode(post.createdAt)}/${Uri.encode(post.like_count.toString())}/${Uri.encode(post.nickname)}") {
+                navController.navigate("communityFeed/${Uri.encode(postId.toString())}/${Uri.encode(post.title)}/${Uri.encode(post.main_text)}/${Uri.encode(post.createdAt)}/${Uri.encode(post.like_count.toString())}/${Uri.encode(post.nickname)}") {
                     popUpTo("communityHome") { inclusive = true }
                 }
             }
         }
     }
 
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        LazyColumn(
-            modifier = Modifier
-                .padding(16.dp)
-                .padding(top = 40.dp)
-        ) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(modifier = Modifier.padding(16.dp).padding(top = 40.dp)) {
             item {
                 Text(
                     text = "커뮤니티",
                     fontSize = 32.sp,
                     fontFamily = FontFamily(Font(R.font.pretendard_extrabold)),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .wrapContentWidth(Alignment.CenterHorizontally)
-                        .padding(top = 20.dp, bottom = 50.dp)
+                    modifier = Modifier.fillMaxWidth().wrapContentWidth(Alignment.CenterHorizontally).padding(bottom = 50.dp)
                 )
             }
 
@@ -121,22 +105,15 @@ fun CommunityScreen(
                     text = "인기 글",
                     fontSize = 25.sp,
                     fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp)
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
                 )
             }
 
             mostLikedPost?.let { post ->
                 item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 16.dp)
-                            .clickable {
-                                navController.navigate("communityFeed/${Uri.encode(post.post_id.toString())}/${Uri.encode(post.title)}/${Uri.encode(post.main_text)}/${Uri.encode(post.createdAt)}/${Uri.encode(post.like_count.toString())}/${Uri.encode(post.nickname)}")
-                            }
-                    ) {
+                    Box(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp).clickable {
+                        navController.navigate("communityFeed/${Uri.encode(post.post_id.toString())}/${Uri.encode(post.title)}/${Uri.encode(post.main_text)}/${Uri.encode(post.createdAt)}/${Uri.encode(post.like_count.toString())}/${Uri.encode(post.nickname)}")
+                    }) {
                         PopularCard(
                             title = post.title,
                             content = post.main_text,
@@ -158,11 +135,8 @@ fun CommunityScreen(
                 }
             }
 
-            item {
-                Spacer(modifier = Modifier.height(40.dp)) // PopularCard와 다음 항목 사이에 패딩 추가
-            }
+            item { Spacer(modifier = Modifier.height(40.dp)) }
 
-            // filteredPosts가 비어있지 않은지 확인
             if (filteredPosts.isEmpty()) {
                 item {
                     Text(
@@ -175,7 +149,7 @@ fun CommunityScreen(
                 }
             } else {
                 items(filteredPosts) { post ->
-                    Log.d("CommunityScreen", "Post: $post") // 각 게시글 출력
+                    Log.d("CommunityScreen", "Post: $post")
                     post?.let {
                         Box(
                             modifier = Modifier
@@ -199,18 +173,14 @@ fun CommunityScreen(
             }
 
             item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp)
-                )
+                Box(modifier = Modifier.fillMaxWidth().height(50.dp))
             }
         }
 
         Box(
             modifier = Modifier
-                .align(Alignment.BottomEnd) // 오른쪽 하단에 배치
-                .padding(16.dp) // 여백 추가
+                .align(Alignment.BottomEnd)
+                .padding(16.dp)
         ) {
             DrawCircleWithCross {
                 navController.navigate("communityWrite")
@@ -218,7 +188,6 @@ fun CommunityScreen(
         }
     }
 }
-
 
 
 
