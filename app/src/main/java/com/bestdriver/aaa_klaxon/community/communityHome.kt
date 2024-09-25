@@ -1,3 +1,4 @@
+import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -62,19 +63,33 @@ import com.bestdriver.aaa_klaxon.ui.theme.MyPurple
 fun CommunityScreen(
     navController: NavController,
     viewModel: CommunityWriteScreenViewModel,
-    newPostId: Int? = null // 새로 추가된 게시글 ID를 선택적으로 받을 수 있습니다
+    newPostId: Int? = null
 ) {
-    val posts by viewModel.posts.collectAsState() // StateFlow<List<Post>>를 List<Post>로 변환합니다
+    val posts by viewModel.posts.collectAsState()
     val mostLikedPost by remember { derivedStateOf { viewModel.getMostLikedPost() } }
+
+    // CommunityScreen에 들어올 때마다 fetchPosts() 호출
+    LaunchedEffect(Unit) {
+        viewModel.fetchPosts()
+    }
+
+    // 필터링된 게시글 목록
+    val filteredPosts = posts.filter {
+        it.title != null || it.main_text != null // 하나라도 있을 경우 포함
+    }
+
+
+    // 필터링된 게시글 로그 출력
+    Log.d("CommunityScreen", "Filtered posts: $filteredPosts")
+
+    // 전체 게시글 로그 출력
+    Log.d("CommunityScreen", "All posts: $posts")
 
     // 새 게시글 ID가 변경될 때마다 네비게이션을 수행
     LaunchedEffect(newPostId) {
         newPostId?.let { postId ->
-            val post = posts.find { it.post_id == postId }
-            if (post != null) {
-                // 게시글 상세 페이지로 이동
-                navController.navigate("communityFeed/${post.post_id}/${post.title}/${post.main_text}/${post.createdAt}/${post.like_count}/${post.nickname}") {
-                    // 이 코드로 인해 CommunityScreen이 제거되고 CommunityFeed가 보여질 것입니다.
+            posts.find { it.post_id == postId }?.let { post ->
+                navController.navigate("communityFeed/${Uri.encode(post.post_id.toString())}/${Uri.encode(post.title)}/${Uri.encode(post.main_text)}/${Uri.encode(post.createdAt)}/${Uri.encode(post.like_count.toString())}/${Uri.encode(post.nickname)}") {
                     popUpTo("communityHome") { inclusive = true }
                 }
             }
@@ -82,8 +97,7 @@ fun CommunityScreen(
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = Modifier.fillMaxSize()
     ) {
         LazyColumn(
             modifier = Modifier
@@ -113,26 +127,26 @@ fun CommunityScreen(
                 )
             }
 
-            if (mostLikedPost != null) {
+            mostLikedPost?.let { post ->
                 item {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 16.dp)
                             .clickable {
-                                navController.navigate("communityFeed/${mostLikedPost!!.post_id}/${mostLikedPost!!.title}/${mostLikedPost!!.main_text}/${mostLikedPost!!.createdAt}/${mostLikedPost!!.like_count}/${mostLikedPost!!.nickname}")
+                                navController.navigate("communityFeed/${Uri.encode(post.post_id.toString())}/${Uri.encode(post.title)}/${Uri.encode(post.main_text)}/${Uri.encode(post.createdAt)}/${Uri.encode(post.like_count.toString())}/${Uri.encode(post.nickname)}")
                             }
                     ) {
                         PopularCard(
-                            title = mostLikedPost!!.title,
-                            content = mostLikedPost!!.main_text,
-                            date = mostLikedPost!!.createdAt,
-                            favoriteCount = mostLikedPost!!.like_count,
-                            commentCount = mostLikedPost!!.comment_count
+                            title = post.title,
+                            content = post.main_text,
+                            date = post.createdAt,
+                            favoriteCount = post.like_count,
+                            commentCount = post.comment_count
                         )
                     }
                 }
-            } else {
+            } ?: run {
                 item {
                     Text(
                         text = "인기 글이 없습니다.",
@@ -148,24 +162,40 @@ fun CommunityScreen(
                 Spacer(modifier = Modifier.height(40.dp)) // PopularCard와 다음 항목 사이에 패딩 추가
             }
 
-            items(posts) { post ->
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            navController.navigate("communityFeed/${post.post_id}/${post.title}/${post.main_text}/${post.createdAt}/${post.like_count}/${post.nickname}")
-                        }
-                ) {
-                    CommunityPost(
-                        title = post.title,
-                        content = post.main_text,
-                        date = post.createdAt,
-                        favoriteCount = post.like_count,
-                        commentCount = post.comment_count
+            // filteredPosts가 비어있지 않은지 확인
+            if (filteredPosts.isEmpty()) {
+                item {
+                    Text(
+                        text = "게시글이 없습니다.",
+                        fontSize = 18.sp,
+                        fontFamily = FontFamily(Font(R.font.pretendard_medium)),
+                        color = Color.Black,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
-                ThinHorizontalLine()
-                Spacer(modifier = Modifier.height(20.dp))
+            } else {
+                items(filteredPosts) { post ->
+                    Log.d("CommunityScreen", "Post: $post") // 각 게시글 출력
+                    post?.let {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    navController.navigate("communityFeed/${Uri.encode(it.post_id.toString())}/${Uri.encode(it.title)}/${Uri.encode(it.main_text)}/${Uri.encode(it.createdAt)}/${Uri.encode(it.like_count.toString())}/${Uri.encode(it.nickname)}")
+                                }
+                        ) {
+                            CommunityPost(
+                                title = it.title,
+                                content = it.main_text,
+                                date = it.createdAt,
+                                favoriteCount = it.like_count,
+                                commentCount = it.comment_count
+                            )
+                        }
+                        ThinHorizontalLine()
+                        Spacer(modifier = Modifier.height(20.dp))
+                    }
+                }
             }
 
             item {
@@ -188,6 +218,9 @@ fun CommunityScreen(
         }
     }
 }
+
+
+
 
 
 

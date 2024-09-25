@@ -193,7 +193,7 @@ fun AppNavGraph(
             CashScreen(navController)
         }
         composable("communityHome") { backStackEntry ->
-            val newPostId = backStackEntry.arguments?.getString("newPostId")?.toIntOrNull() // String에서 Int로 변환
+            val newPostId = backStackEntry.arguments?.getString("newPostId")?.toIntOrNull()
             CommunityScreen(
                 navController = navController,
                 viewModel = communityViewModel,
@@ -220,17 +220,9 @@ fun AppNavGraph(
             )
         }
 
-
-
-
-
-
-
         composable(
             route = "communityFeed/{postId}",
-            arguments = listOf(
-                navArgument("postId") { type = NavType.IntType } // postId는 Int로 변경
-            )
+            arguments = listOf(navArgument("postId") { type = NavType.IntType })
         ) { backStackEntry ->
             val postId = backStackEntry.arguments?.getInt("postId")
 
@@ -242,7 +234,8 @@ fun AppNavGraph(
                 )
             } else {
                 // postId가 null일 경우 처리 (예: 오류 화면)
-                Text("게시글을 찾을 수 없습니다.")
+                // 예를 들어, 네비게이션을 통한 오류 처리 화면으로 이동할 수 있음
+                navController.navigate("errorScreen") // 오류 화면으로 이동
             }
         }
 

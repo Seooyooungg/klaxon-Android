@@ -138,8 +138,8 @@ fun CommunityWriteScreen(
                                 coroutineScope.launch {
                                     val result = viewModel.addPost(title, body, nickname)
                                     if (result != null) {
-                                        // 성공적으로 게시물이 등록되었으면 CommunityFeed로 이동
-                                        navController.navigate("communityScreen") {
+                                        // 성공적으로 게시물이 등록되었으면 CommunityHome으로 이동
+                                        navController.navigate("communityHome?newPostId=$result") {
                                             popUpTo("communityWrite") { inclusive = true }
                                         }
                                     } else {
@@ -160,6 +160,7 @@ fun CommunityWriteScreen(
                 onValueChange = { newTitle ->
                     if (newTitle.length <= titleMaxLength) {
                         titleState.value = newTitle
+                        Log.d("CommunityWriteScreen", "Title updated: $newTitle")
                     }
                 },
                 placeholder = {

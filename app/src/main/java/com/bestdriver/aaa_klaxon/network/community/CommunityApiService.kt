@@ -14,28 +14,32 @@ interface CommunityApiService {
     @GET("community/posts")
     suspend fun getPosts(
         @Header("Authorization") token: String
-    ): Response<PostResponse>
+    ): Response<PostsResponse>
 
-    @FormUrlEncoded
-    @POST("/community/posts")
+
+
+    @POST("community/posts")
     suspend fun createPost(
         @Header("Authorization") token: String,
-        @Field("title") title: String,
-        @Field("main_text") body: String
-    ): Response<ApiResponse>
+        @Body post: PostRequest
+    ): Response<PostResponse>
+
+
 
     @GET("/community/posts/{postId}")
     suspend fun getPostById(
         @Header("Authorization") token: String,
         @Path("postId") postId: Int
-    ): Response<ApiResponse>
+    ): Response<PostResponse>
+
 
     @POST("/community/posts/{postId}/comments")
     suspend fun addComment(
         @Header("Authorization") token: String,
         @Path("postId") postId: Int,
-        @Body body: CommentRequest // 요청 본체를 위한 데이터 클래스를 정의
+        @Body body: CommentRequest
     ): Response<CommentResponse>
+
 
     @GET("/community/posts/{postId}/comments")
     suspend fun getCommentsByPostId(
@@ -43,11 +47,13 @@ interface CommunityApiService {
         @Path("postId") postId: Int
     ): Response<CommentResponse>
 
+
     @POST("community/posts/{postId}/likes")
     suspend fun addLike(
         @Header("Authorization") token: String,
         @Path("postId") postId: Int
     ): Response<LikeResponse>
+
 
     @DELETE("community/posts/{postId}/likes")
     suspend fun removeLike(

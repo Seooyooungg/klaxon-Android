@@ -80,7 +80,7 @@ fun CommunityFeedScreen(
     viewModel: CommunityWriteScreenViewModel,
     postId: Int // 게시글 ID
 ) {
-    val token = "Bearer YOUR_ACCESS_TOKEN"
+    val token = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo0LCJlbWFpbCI6IjExMSIsImNhck51bWJlciI6IjExMSIsImlhdCI6MTcyNjk4MzczOCwiZXhwIjoxNzI3NTg4NTM4fQ.1M5Hjd53HqTaVSxfs28gzL4x96UXAoQrzA15VpoNwNg"
 
     LaunchedEffect(postId) {
         viewModel.fetchPostById(token, postId)

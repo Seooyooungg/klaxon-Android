@@ -6,7 +6,7 @@ data class PostResponse(
     val isSuccess: Boolean,
     val code: Int,
     val message: String,
-    val result: List<Post>
+    val result: PostResult
 )
 
 data class Post(
@@ -20,6 +20,12 @@ data class Post(
     val comment_count: Int
 )
 
+data class PostRequest(
+    val title: String,
+    val main_text: String,
+    val nickname: String
+)
+
 data class Comment(
     val userName: String,
     val body: String,
@@ -27,12 +33,15 @@ data class Comment(
     val time: String
 )
 
-data class ApiResponse(
+data class ApiResponse<T>(
     val isSuccess: Boolean,
     val code: Int,
     val message: String,
-    val result: PostResult?
+    val result: T? // 제네릭 타입으로 변경
 )
+
+// PostsResponse 타입 정의
+typealias PostsResponse = ApiResponse<List<PostResult>>
 
 data class PostResult(
     val post_id: Int,
