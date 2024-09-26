@@ -182,7 +182,9 @@ fun CommunityWriteScreen(
                 ),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White
+                    unfocusedContainerColor = Color.White,
+                    focusedIndicatorColor = Color.Transparent, // 아래 선 색상
+                    unfocusedIndicatorColor = Color.Transparent // 아래 선 색상
                 )
             )
 

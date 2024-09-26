@@ -30,7 +30,6 @@ fun CustomTopAppBar(
     Column(modifier = modifier) {
         CenterAlignedTopAppBar(
             modifier = Modifier
-                .padding(top = 20.dp)
                 .fillMaxWidth(), // Ensure the app bar fills the width of its parent
             navigationIcon = {
                 IconButton(onClick = onNavigationIconClick) {

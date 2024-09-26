@@ -49,6 +49,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -61,7 +62,9 @@ import androidx.lifecycle.ViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.bestdriver.aaa_klaxon.R
+import com.bestdriver.aaa_klaxon.network.TokenManager
 import com.bestdriver.aaa_klaxon.network.community.Comment
+import com.bestdriver.aaa_klaxon.network.community.CommentRequest
 import com.bestdriver.aaa_klaxon.network.community.CommunityWriteScreenViewModel
 import com.bestdriver.aaa_klaxon.network.community.Post
 import com.bestdriver.aaa_klaxon.ui.theme.MyPurple
@@ -80,11 +83,14 @@ fun CommunityFeedScreen(
     viewModel: CommunityWriteScreenViewModel,
     postId: Int // 게시글 ID
 ) {
-    val token = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo0LCJlbWFpbCI6IjExMSIsImNhck51bWJlciI6IjExMSIsImlhdCI6MTcyNjk4MzczOCwiZXhwIjoxNzI3NTg4NTM4fQ.1M5Hjd53HqTaVSxfs28gzL4x96UXAoQrzA15VpoNwNg"
+    // TokenManager 인스턴스 가져오기
+    val context = LocalContext.current
+    val tokenManager = TokenManager(context)
+    val token = "Bearer ${tokenManager.getToken() ?: ""}" // 토큰 가져오기
 
     LaunchedEffect(postId) {
-        viewModel.fetchPostById(token, postId)
-        viewModel.fetchCommentsForPost(token, postId)
+        viewModel.fetchPostById(postId)
+        viewModel.fetchCommentsForPost(postId)
     }
 
     val post by viewModel.selectedPost.collectAsState()
@@ -95,38 +101,59 @@ fun CommunityFeedScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Icon(
-            imageVector = Icons.Default.ArrowBack,
-            contentDescription = "Back",
+        LazyColumn(
             modifier = Modifier
-                .size(40.dp)
-                .clickable { navController.navigateUp() },
-            tint = Color.Black
-        )
-        Spacer(modifier = Modifier.height(20.dp))
+                .weight(1f) // 스크롤 가능한 부분이 전체 공간을 차지하도록
+        ) {
+            // 뒤로 가기 아이콘
+            item {
+                Icon(
+                    imageVector = Icons.Default.ArrowBack,
+                    contentDescription = "Back",
+                    modifier = Modifier
+                        .size(35.dp)
+                        .padding(top = 10.dp)
+                        .clickable { navController.navigateUp() },
+                    tint = Color.Black
+                )
+            }
 
-        post?.let { validPost ->
-            PostItem(
-                post = validPost,
-                viewModel = viewModel
-            )
+            item {
+                Spacer(modifier = Modifier.height(10.dp))
+            }
 
-            Spacer(modifier = Modifier.height(16.dp))
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .weight(1f)
-            ) {
-                items(comments[validPost.post_id] ?: emptyList()) { comment ->
-                    CommentItem(comment)
+            // 게시글 내용
+            post?.let { validPost ->
+                item {
+                    PostItem(
+                        post = validPost,
+                        viewModel = viewModel
+                    )
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
+                // 댓글 목록을 표시하는 아이템
+                comments[validPost.post_id]?.forEach { comment ->
+                    item {
+                        CommentItem(comment)
+                    }
+                }
+            } ?: run {
+                item {
+                    Text("게시글을 불러오는 중입니다...")
                 }
             }
-            CommentSection(viewModel, validPost.post_id)
-        } ?: run {
-            Text("게시글을 불러오는 중입니다...")
         }
+
+        // 댓글 입력란을 LazyColumn의 아래에 고정
+        CommentSection(viewModel, post?.post_id ?: -1, token) // token 전달
     }
 }
+
+
 
 
 
@@ -142,10 +169,10 @@ fun PostItem(post: Post, viewModel: CommunityWriteScreenViewModel) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 20.dp)
+            .padding(top = 10.dp)
     ) {
         CircleCanvas(
-            modifier = Modifier.size(70.dp)
+            modifier = Modifier.size(60.dp)
         )
         Column(modifier = Modifier.padding(start = 20.dp)) {
             Text(
@@ -182,8 +209,7 @@ fun PostItem(post: Post, viewModel: CommunityWriteScreenViewModel) {
             imageVector = if (isLiked.value) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
             contentDescription = "Favorite",
             modifier = Modifier
-                .size(43.dp)
-                .padding(start = 10.dp)
+                .size(35.dp)
                 .clickable {
                     coroutineScope.launch {
                         isLiked.value = !isLiked.value
@@ -204,7 +230,7 @@ fun PostItem(post: Post, viewModel: CommunityWriteScreenViewModel) {
         fontFamily = FontFamily(Font(R.font.pretendard_medium)),
         color = Color.Black,
         modifier = Modifier
-            .padding(top = 20.dp)
+            .padding(top = 10.dp)
             .padding(bottom = 15.dp)
     )
     Row(
@@ -257,17 +283,15 @@ fun CommentItem(comment: Comment) {
             .padding(top = 30.dp)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
+            modifier = Modifier.fillMaxWidth()
         ) {
             CircleCanvas(
-                modifier = Modifier
-                    .size(40.dp) // Canvas의 크기를 지정
+                modifier = Modifier.size(40.dp) // Canvas의 크기를 지정
             )
             Text(
-                text = comment.userName,
+                text = comment.nickname,
                 fontSize = 20.sp,
-                fontWeight = FontWeight.Normal,
+                fontFamily = FontFamily(Font(R.font.pretendard_regular)),
                 color = Color.Black,
                 modifier = Modifier
                     .padding(start = 10.dp)
@@ -279,29 +303,18 @@ fun CommentItem(comment: Comment) {
             fontSize = 17.sp,
             fontWeight = FontWeight.Medium,
             color = Color.Black,
-            modifier = Modifier
-                .padding(top = 10.dp)
+            modifier = Modifier.padding(top = 10.dp)
         )
         Row(
-            modifier = Modifier
-                .padding(top = 8.dp)
+            modifier = Modifier.padding(top = 8.dp)
         ) {
             Text(
-                text = comment.date,
+                text = comment.createdAt, // createdAt으로 변경
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Medium,
                 color = Color.Black.copy(alpha = 0.5f),
             )
-            Text(
-                text = comment.time,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color.Black.copy(alpha = 0.5f),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 5.dp)
-                    .padding(bottom = 25.dp)
-            )
+            Spacer(modifier = Modifier.width(5.dp)) // 여백 추가
         }
         ThinHorizontalLine()
     }
@@ -309,9 +322,9 @@ fun CommentItem(comment: Comment) {
 
 
 @Composable
-fun CommentSection(viewModel: CommunityWriteScreenViewModel, postId: Int) {
+fun CommentSection(viewModel: CommunityWriteScreenViewModel, postId: Int, token: String) {
     val commentText = remember { mutableStateOf("") }
-    val coroutineScope = rememberCoroutineScope() // Coroutine scope 생성
+    val coroutineScope = rememberCoroutineScope()
 
     Box(
         modifier = Modifier
@@ -325,10 +338,7 @@ fun CommentSection(viewModel: CommunityWriteScreenViewModel, postId: Int) {
             value = commentText.value,
             onValueChange = { newComment -> commentText.value = newComment },
             placeholder = {
-                Text(
-                    text = "댓글을 입력하세요",
-                    fontFamily = FontFamily(Font(R.font.pretendard_medium))
-                )
+                Text(text = "댓글을 입력하세요", fontFamily = FontFamily(Font(R.font.pretendard_medium)))
             },
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = Color.White,
@@ -343,22 +353,15 @@ fun CommentSection(viewModel: CommunityWriteScreenViewModel, postId: Int) {
                 .padding(bottom = 4.dp)
                 .background(MyPurple)
                 .clickable {
-                    coroutineScope.launch { // Coroutine scope 내에서 실행
-                        val dateFormat = SimpleDateFormat("MM/dd", Locale.getDefault())
-                        val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-                        val currentDate = dateFormat.format(Calendar.getInstance().time)
-                        val currentTime = timeFormat.format(Calendar.getInstance().time)
-
-                        viewModel.addComment(
-                            postId = postId,
-                            comment = Comment(
-                                userName = "임시 사용자", // 실제 사용자 이름으로 변경
-                                body = commentText.value,
-                                date = currentDate,
-                                time = currentTime
-                            )
-                        )
-                        commentText.value = "" // 댓글 등록 후 텍스트 필드를 비웁니다.
+                    coroutineScope.launch {
+                        val request = CommentRequest(text = commentText.value)
+                        // 댓글 추가 요청
+                        val success = viewModel.addComment(postId, request)
+                        if (success) {
+                            // 댓글 목록 갱신
+                            viewModel.fetchCommentsForPost(postId)
+                            commentText.value = "" // 텍스트 필드 비우기
+                        }
                     }
                 }
                 .padding(horizontal = 8.dp, vertical = 4.dp)
@@ -368,12 +371,12 @@ fun CommentSection(viewModel: CommunityWriteScreenViewModel, postId: Int) {
                 fontSize = 16.sp,
                 fontFamily = FontFamily(Font(R.font.pretendard_medium)),
                 color = Color.White,
-                modifier = Modifier
-                    .align(Alignment.Center)
+                modifier = Modifier.align(Alignment.Center)
             )
         }
     }
 }
+
 
 
 
@@ -398,15 +401,15 @@ fun ThinHorizontalLine() {
         modifier = Modifier
             .fillMaxWidth(),
         thickness = 1.dp,
-        color = Color.Black.copy(alpha = 0.4f)
+        color = Color.Black.copy(alpha = 0.3f)
     )
 }
 
-@Preview(showBackground = true)
-@Composable
-fun PreviewCommunityFeedScreen() {
-    val dummyViewModel = CommunityWriteScreenViewModel().apply {
-        // 필요한 경우 ViewModel에 더미 데이터를 설정합니다.
-        // 예: posts.add(Post(...))
-    }
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun PreviewCommunityFeedScreen() {
+//    val dummyViewModel = CommunityWriteScreenViewModel().apply {
+//        // 필요한 경우 ViewModel에 더미 데이터를 설정합니다.
+//        // 예: posts.add(Post(...))
+//    }
+//}

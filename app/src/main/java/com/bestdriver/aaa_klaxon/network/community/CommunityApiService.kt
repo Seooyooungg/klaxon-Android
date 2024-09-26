@@ -45,7 +45,7 @@ interface CommunityApiService {
     suspend fun getCommentsByPostId(
         @Header("Authorization") token: String,
         @Path("postId") postId: Int
-    ): Response<CommentResponse>
+    ): Response<CommentsResponse>
 
 
     @POST("community/posts/{postId}/likes")

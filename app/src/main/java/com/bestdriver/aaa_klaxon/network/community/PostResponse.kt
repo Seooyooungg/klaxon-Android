@@ -27,11 +27,14 @@ data class PostRequest(
 )
 
 data class Comment(
-    val userName: String,
+    val commentId: Int, // comment_id
+    val postId: Int,    // post_id
+    val userId: Int,    // user_id
+    val nickname: String,
     val body: String,
-    val date: String,
-    val time: String
+    val createdAt: String // ISO 8601 형식으로 저장된 날짜
 )
+
 
 data class ApiResponse<T>(
     val isSuccess: Boolean,
@@ -59,30 +62,23 @@ data class CommentRequest(
     val text: String
 )
 
-// CommentResponse를 ApiResponse의 형태로 변경
-typealias CommentResponse = ApiResponse<CommentResult>
-typealias CommentsResponse = ApiResponse<List<CommentResult>>
-
-//data class CommentResponse(
-//    val isSuccess: Boolean,
-//    val code: Int,
-//    val message: String,
-//    val result: List<CommentResult>? // 배열로 수정
-//) {
-//    override fun toString(): String {
-//        return "CommentResponse(isSuccess=$isSuccess, code=$code, message='$message', result=$result)"
-//    }
-//}
-
-
+// CommentResult 정의
 data class CommentResult(
     val comment_id: Int,
-    val nickname: String,
     val post_id: Int,
     val user_id: Int,
+    val nickname: String,
     val text: String,
     val createdAt: String
 )
+
+// CommentResponse를 ApiResponse의 형태로 변경
+typealias CommentResponse = ApiResponse<CommentResult>
+
+// CommentsResponse를 ApiResponse로 통일
+typealias CommentsResponse = ApiResponse<List<CommentResult>>
+
+
 
 data class LikeResponse(
     val isSuccess: Boolean,

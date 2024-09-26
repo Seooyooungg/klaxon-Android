@@ -47,19 +47,24 @@ fun CashScreen(navController: NavController) {
             )
         }
     ) { paddingValues -> // Scaffold에서 제공하는 paddingValues 사용
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .padding(paddingValues) // topBar에 의해 생기는 padding 처리
                 .padding(16.dp)
-                .fillMaxSize()
         ) {
-            // 나머지 콘텐츠
-            CashDetails()
-            Spacer(modifier = Modifier.height(16.dp))
-            CashHistory()
+            item {
+                CashDetails()
+            }
+            item {
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+            item {
+                CashHistory()
+            }
         }
     }
 }
+
 
 
 @Composable
@@ -72,7 +77,7 @@ fun CashDetails() {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 16.dp),
+                .padding(vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {

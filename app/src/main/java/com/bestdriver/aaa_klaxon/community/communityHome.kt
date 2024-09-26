@@ -90,20 +90,23 @@ fun CommunityScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        LazyColumn(modifier = Modifier.padding(16.dp).padding(top = 40.dp)) {
+        LazyColumn(modifier = Modifier.padding(16.dp).padding(top = 45.dp)) {
             item {
                 Text(
                     text = "커뮤니티",
                     fontSize = 32.sp,
                     fontFamily = FontFamily(Font(R.font.pretendard_extrabold)),
-                    modifier = Modifier.fillMaxWidth().wrapContentWidth(Alignment.CenterHorizontally).padding(bottom = 50.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentWidth(Alignment.CenterHorizontally)
+                        .padding(bottom = 30.dp)
                 )
             }
 
             item {
                 Text(
                     text = "인기 글",
-                    fontSize = 25.sp,
+                    fontSize = 23.sp,
                     fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
                     modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
                 )
@@ -111,7 +114,9 @@ fun CommunityScreen(
 
             mostLikedPost?.let { post ->
                 item {
-                    Box(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp).clickable {
+                    Box(modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
                         navController.navigate("communityFeed/${Uri.encode(post.post_id.toString())}/${Uri.encode(post.title)}/${Uri.encode(post.main_text)}/${Uri.encode(post.createdAt)}/${Uri.encode(post.like_count.toString())}/${Uri.encode(post.nickname)}")
                     }) {
                         PopularCard(
@@ -135,7 +140,7 @@ fun CommunityScreen(
                 }
             }
 
-            item { Spacer(modifier = Modifier.height(40.dp)) }
+            item { Spacer(modifier = Modifier.height(30.dp)) }
 
             if (filteredPosts.isEmpty()) {
                 item {
@@ -167,13 +172,15 @@ fun CommunityScreen(
                             )
                         }
                         ThinHorizontalLine()
-                        Spacer(modifier = Modifier.height(20.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
                     }
                 }
             }
 
             item {
-                Box(modifier = Modifier.fillMaxWidth().height(50.dp))
+                Box(modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp))
             }
         }
 
@@ -191,11 +198,6 @@ fun CommunityScreen(
 
 
 
-
-
-
-
-
 @Composable
 fun CommunityPost(
     title: String,
@@ -204,14 +206,14 @@ fun CommunityPost(
     favoriteCount: Int,
     commentCount: Int
 ) {
-    Column(modifier = Modifier.padding(bottom = 16.dp)) {
+    Column(modifier = Modifier.padding(bottom = 10.dp)) {
         Text(
             text = title,
-            fontSize = 23.sp,
+            fontSize = 22.sp,
             fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp)
+                .padding(bottom = 13.dp)
         )
 
         Text(
@@ -222,26 +224,26 @@ fun CommunityPost(
             fontFamily = FontFamily(Font(R.font.pretendard_medium)),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp)
+                .padding(bottom = 13.dp)
         )
 
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 15.dp)
+                .padding(bottom = 13.dp)
         ) {
             Icon(
                 imageVector = Icons.Default.Favorite,
                 contentDescription = "Favorite",
                 modifier = Modifier
-                    .size(24.dp)
+                    .size(22.dp)
                     .padding(end = 5.dp),
                 tint = MyPurple
             )
 
             Text(
                 text = favoriteCount.toString(),
-                fontSize = 16.sp,
+                fontSize = 13.sp,
                 fontFamily = FontFamily(Font(R.font.pretendard_medium)),
                 color = Color.Black,
                 modifier = Modifier.padding(end = 5.dp)
@@ -251,14 +253,14 @@ fun CommunityPost(
                 imageVector = Icons.Default.Person,
                 contentDescription = "Chat",
                 modifier = Modifier
-                    .size(24.dp)
+                    .size(22.dp)
                     .padding(end = 5.dp),
                 tint = MyPurple
             )
 
             Text(
                 text = commentCount.toString(),
-                fontSize = 16.sp,
+                fontSize = 13.sp,
                 fontFamily = FontFamily(Font(R.font.pretendard_regular)),
                 color = Color.Black,
                 modifier = Modifier.padding(end = 10.dp)
@@ -268,7 +270,7 @@ fun CommunityPost(
 
             Text(
                 text = date,
-                fontSize = 16.sp,
+                fontSize = 13.sp,
                 fontFamily = FontFamily(Font(R.font.pretendard_regular)),
                 color = Color.Black.copy(alpha = 0.5f),
                 modifier = Modifier.padding(start = 10.dp)
@@ -333,14 +335,14 @@ fun PopularCard(
                         imageVector = Icons.Default.Favorite,
                         contentDescription = "Favorite",
                         modifier = Modifier
-                            .size(30.dp)
+                            .size(25.dp)
                             .padding(bottom = 4.dp),
                         tint = MyPurple
                     )
 
                     Text(
                         text = favoriteCount.toString(),
-                        fontSize = 18.sp,
+                        fontSize = 15.sp,
                         fontFamily = FontFamily(Font(R.font.pretendard_medium)),
                         color = Color.Black
                     )
@@ -355,14 +357,14 @@ fun PopularCard(
                         imageVector = Icons.Default.Person,
                         contentDescription = "Chat",
                         modifier = Modifier
-                            .size(30.dp)
+                            .size(25.dp)
                             .padding(bottom = 4.dp),
                         tint = MyPurple
                     )
 
                     Text(
                         text = commentCount.toString(),
-                        fontSize = 18.sp,
+                        fontSize = 15.sp,
                         fontFamily = FontFamily(Font(R.font.pretendard_medium)),
                         color = Color.Black
                     )
@@ -388,10 +390,10 @@ fun ThinHorizontalLine() {
 fun SmallVerticalLine() {
     Box(
         modifier = Modifier
-            .height(15.dp) // 선의 높이를 설정 (작게 설정)
+            .height(13.dp) // 선의 높이를 설정 (작게 설정)
             .width(1.dp) // 선의 두께를 설정 (얇게 설정)
             .background(Color.Black.copy(alpha = 0.3f)) // 선의 색상 및 투명도 설정
-            .padding(top = 3.dp)
+            .padding(top = 10.dp)
     )
 }
 

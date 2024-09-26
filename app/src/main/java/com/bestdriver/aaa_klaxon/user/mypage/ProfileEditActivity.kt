@@ -6,6 +6,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -47,13 +48,12 @@ fun ProfileEditScreen(navController: NavController, modifier: Modifier = Modifie
     var serverNickname by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("email") }
     var carNumber by remember { mutableStateOf("CarNumber") }
-    var updateMessage by remember { mutableStateOf("") } // 추가: 업데이트 메시지 상태
+    var updateMessage by remember { mutableStateOf("") }
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
 
     val mypageApiService = RetrofitClient.getMypageApiService(context)
 
-    // 사용자 정보 가져오기
     LaunchedEffect(Unit) {
         try {
             val response = mypageApiService.getUserInfo()
@@ -80,26 +80,20 @@ fun ProfileEditScreen(navController: NavController, modifier: Modifier = Modifie
             )
         }
     ) { paddingValues ->
-        Column(
+        LazyColumn(
             modifier = modifier
-                .padding(paddingValues) // topBar에 의해 생기는 padding 처리
+                .padding(paddingValues)
                 .padding(16.dp)
-                .fillMaxSize()
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(8.dp) // 항목 간의 간격
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clickable {
-                        focusManager.clearFocus()
-                    },
-                verticalArrangement = Arrangement.SpaceBetween,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+            item {
                 CircleWithCross(modifier = Modifier.clickable {
                     val intent = Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
                     context.startActivity(intent)
                 })
-
+            }
+            item {
                 Text(
                     text = serverNickname,
                     fontSize = 25.sp,
@@ -107,23 +101,20 @@ fun ProfileEditScreen(navController: NavController, modifier: Modifier = Modifie
                     color = Color.Black,
                     modifier = Modifier.padding(top = 10.dp)
                 )
-
+            }
+            item {
                 Text(
                     text = "아이디(이메일)",
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Medium,
                     color = Color.Black,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 10.dp)
-                        .padding(bottom = 5.dp)
-                        .align(Alignment.Start)
+                    modifier = Modifier.fillMaxWidth().padding(top = 10.dp, bottom = 5.dp)
                 )
-
+            }
+            item {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 8.dp)
                         .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
                 ) {
                     Text(
@@ -136,23 +127,20 @@ fun ProfileEditScreen(navController: NavController, modifier: Modifier = Modifie
                             .padding(12.dp)
                     )
                 }
-
+            }
+            item {
                 Text(
                     text = "차번호",
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Medium,
                     color = Color.Black,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 10.dp)
-                        .padding(bottom = 5.dp)
-                        .align(Alignment.Start)
+                    modifier = Modifier.fillMaxWidth().padding(top = 10.dp, bottom = 5.dp)
                 )
-
+            }
+            item {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 8.dp)
                         .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
                 ) {
                     Text(
@@ -165,39 +153,35 @@ fun ProfileEditScreen(navController: NavController, modifier: Modifier = Modifie
                             .padding(12.dp)
                     )
                 }
-
+            }
+            item {
                 Text(
                     text = "닉네임*",
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Medium,
                     color = Color.Black,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 10.dp)
-                        .padding(bottom = 5.dp)
-                        .align(Alignment.Start)
+                    modifier = Modifier.fillMaxWidth().padding(top = 10.dp, bottom = 5.dp)
                 )
-
+            }
+            item {
                 OutlinedTextField(
                     value = nickname,
                     onValueChange = { nickname = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp),
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
                 )
-
+            }
+            item {
                 // 409 에러 메시지 표시
                 if (updateMessage == "이미 존재하는 사용자입니다.") {
                     Text(
                         text = updateMessage,
                         color = MyPurple,
                         fontSize = 16.sp,
-                        modifier = Modifier.align(Alignment.Start) // 왼쪽 정렬
+                        modifier = Modifier.fillMaxWidth() // 왼쪽 정렬
                     )
                 }
-
-                Spacer(modifier = Modifier.weight(1f))
-
+            }
+            item {
                 Button(
                     onClick = {
                         if (nickname.isNotEmpty()) {
@@ -210,7 +194,7 @@ fun ProfileEditScreen(navController: NavController, modifier: Modifier = Modifie
                         }
                     },
                     modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
+                        .fillMaxWidth()
                         .padding(top = 16.dp)
                         .padding(bottom = 50.dp),
                     enabled = nickname.isNotEmpty(),
@@ -221,20 +205,22 @@ fun ProfileEditScreen(navController: NavController, modifier: Modifier = Modifie
                 ) {
                     Text("수정 완료", fontSize = 20.sp, color = Color.White)
                 }
-
+            }
+            item {
                 // 업데이트 메시지 표시
                 if (updateMessage.isNotEmpty() && updateMessage != "이미 존재하는 사용자입니다.") {
                     Text(
                         text = updateMessage,
                         color = MyPurple,
                         fontSize = 16.sp,
-                        modifier = Modifier.align(Alignment.Start) // 왼쪽 정렬
+                        modifier = Modifier.fillMaxWidth() // 왼쪽 정렬
                     )
                 }
             }
         }
     }
 }
+
 
 private fun updateNickname(
     mypageApiService: MypageApiService,
