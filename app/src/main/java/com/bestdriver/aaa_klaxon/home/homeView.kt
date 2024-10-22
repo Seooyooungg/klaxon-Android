@@ -174,6 +174,7 @@ fun MapCard(navController: NavController) {
 
     val trafficData by viewModel.trafficData.collectAsState()
     var selectedCategory by remember { mutableStateOf("") }
+    var selectedColor by remember { mutableStateOf(Color.Black) } // 선택된 원의 색상
 
     val sortedTrafficData = trafficData.sortedBy { it.count }
     val minData = sortedTrafficData.firstOrNull()
@@ -214,6 +215,7 @@ fun MapCard(navController: NavController) {
                         .absoluteOffset(x = 165.dp, y = 115.dp)
                         .clickable {
                             selectedCategory = maxData?.misrecognized_sign_name ?: ""
+                            selectedColor = Color.Red // 빨간색 원 선택 시
                         }
                 ) {
                     DrawCircleWithBorder(
@@ -240,6 +242,7 @@ fun MapCard(navController: NavController) {
                         .absoluteOffset(x = 80.dp, y = 125.dp)
                         .clickable {
                             selectedCategory = midData?.misrecognized_sign_name ?: ""
+                            selectedColor = Color(0xFFFFA500) // 주황색 원 선택 시
                         }
                 ) {
                     DrawCircleWithBorder(
@@ -266,6 +269,7 @@ fun MapCard(navController: NavController) {
                         .absoluteOffset(x = 175.dp, y = 230.dp)
                         .clickable {
                             selectedCategory = minData?.misrecognized_sign_name ?: ""
+                            selectedColor = Color(0xFFE0C200) // 노란색 원 선택 시
                         }
                 ) {
                     DrawCircleWithBorder(
@@ -287,15 +291,15 @@ fun MapCard(navController: NavController) {
             }
         }
 
-        ListCard(selectedCategory)
+        // 선택된 원에 맞는 카테고리와 색상으로 ListCard 표시
+        ListCard(selectedCategory = selectedCategory, iconColor = selectedColor)
     }
 }
 
 
 
-
 @Composable
-fun ListCard(selectedCategory: String) {
+fun ListCard(selectedCategory: String, iconColor: Color) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -399,116 +403,318 @@ fun ListCard(selectedCategory: String) {
                 .fillMaxWidth()
                 .padding(top = 5.dp)
         ) {
-            item {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(15.dp)
-                ) {
-                    Row {
-                        Icon(
-                            imageVector = Icons.Default.Info,
-                            contentDescription = "오분류 아이콘",
-                            tint = Color.Red,
-                            modifier = Modifier
-                                .size(20.dp)
-                                .padding(top = 5.dp)
-                        )
-                        Spacer(modifier = Modifier.width(15.dp))
-                        Column {
-                            Text(
-                                text = "$selectedCategory 오분류 지역 1",
-                                fontFamily = FontFamily(Font(R.font.pretendard_medium)),
-                                fontSize = 16.sp
-                            )
-                            Spacer(modifier = Modifier.height(7.dp))
-                            Text(
-                                text = "$selectedCategory 오분류가 발생한 상세 설명",
-                                fontFamily = FontFamily(Font(R.font.pretendard_medium)),
-                                fontSize = 13.sp
-                            )
-                        }
-                    }
+            if (selectedCategory.isEmpty()) {
+                item {
+                    // 아무것도 클릭하지 않았을 때 기본 메시지 표시
+                    Text(
+                        text = "표지판 오분류 정보가 없습니다",
+                        fontFamily = FontFamily(Font(R.font.pretendard_medium)),
+                        fontSize = 16.sp,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    )
                 }
-                Divider(
-                    color = Color.Gray,
-                    thickness = 0.5.dp
-                )
-            }
-            item {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(15.dp)
-                ) {
-                    Row{
-                        Icon(
-                            imageVector = Icons.Default.Info,
-                            contentDescription = "오분류 아이콘",
-                            tint = Color(0xFFFFA500),
-                            modifier = Modifier
-                                .size(20.dp)
-                                .padding(top = 5.dp)
-                        )
-                        Spacer(modifier = Modifier.width(15.dp))
-                        Column {
-                            Text(
-                                text = "서울특별시 도봉구 우이천로38길 18-6",
-                                fontFamily = FontFamily(Font(R.font.pretendard_medium)),
-                                fontSize = 16.sp
+            } else if (iconColor == Color.Red) {
+                // 빨간 원 클릭 시 데이터 표시
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(15.dp)
+                    ) {
+                        Row {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = "오분류 아이콘",
+                                tint = iconColor,
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .padding(top = 5.dp)
                             )
-                            Spacer(modifier = Modifier.height(7.dp))
-
-                            Text(
-                                text = "서행표지판 인식 결과 50% 오분류",
-                                fontFamily = FontFamily(Font(R.font.pretendard_medium)),
-                                fontSize = 13.sp
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(15.dp))
-
-                    }
-
-                }
-                Divider(
-                    color = Color.Gray,
-                    thickness = 0.5.dp
-                )
-            }
-            item {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(15.dp)
-                ) {
-                    Row {
-                        Icon(
-                            imageVector = Icons.Default.Info,
-                            contentDescription = "오분류 아이콘",
-                            tint = Color(0xFFE0C200),
-                            modifier = Modifier
-                                .size(20.dp)
-                                .padding(top = 5.dp)
-                        )
-                        Spacer(modifier = Modifier.width(15.dp))
-                        Column {
-                            Text(
-                                text = "서울특별시 강북구 수유동 270-63",
-                                fontFamily = FontFamily(Font(R.font.pretendard_medium)),
-                                fontSize = 16.sp
-                            )
-                            Spacer(modifier = Modifier.height(7.dp))
-
-                            Text(
-                                text = "진입금지 표지판 인식 결과 15% 오분류",
-                                fontFamily = FontFamily(Font(R.font.pretendard_medium)),
-                                fontSize = 13.sp
+                            Spacer(modifier = Modifier.width(15.dp))
+                            Column {
+                                Text(
+                                    text = "서울특별시 노원구 동일로 207길 18",
+                                    fontFamily = FontFamily(Font(R.font.pretendard_medium)),
+                                    fontSize = 16.sp
                                 )
+                                Spacer(modifier = Modifier.height(7.dp))
+                                Text(
+                                    text = "$selectedCategory 표지판이 우회전 표지판으로 17회 오분류",
+                                    fontFamily = FontFamily(Font(R.font.pretendard_medium)),
+                                    fontSize = 13.sp
+                                )
+                            }
                         }
-                        Spacer(modifier = Modifier.width(15.dp))
-
                     }
-
+                    Divider(color = Color.Gray, thickness = 0.5.dp)
+                }
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(15.dp)
+                    ) {
+                        Row {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = "오분류 아이콘",
+                                tint = iconColor,
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .padding(top = 5.dp)
+                            )
+                            Spacer(modifier = Modifier.width(15.dp))
+                            Column {
+                                Text(
+                                    text = "서울특별시 노원구 동일로 207길 18",
+                                    fontFamily = FontFamily(Font(R.font.pretendard_medium)),
+                                    fontSize = 16.sp
+                                )
+                                Spacer(modifier = Modifier.height(7.dp))
+                                Text(
+                                    text = "$selectedCategory 표지판이 좌회전 금지 표지판으로 10회 오분류",
+                                    fontFamily = FontFamily(Font(R.font.pretendard_medium)),
+                                    fontSize = 13.sp
+                                )
+                            }
+                        }
+                    }
+                    Divider(color = Color.Gray, thickness = 0.5.dp)
+                }
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(15.dp)
+                    ) {
+                        Row {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = "오분류 아이콘",
+                                tint = iconColor,
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .padding(top = 5.dp)
+                            )
+                            Spacer(modifier = Modifier.width(15.dp))
+                            Column {
+                                Text(
+                                    text = "서울특별시 노원구 동일로 207길 18",
+                                    fontFamily = FontFamily(Font(R.font.pretendard_medium)),
+                                    fontSize = 16.sp
+                                )
+                                Spacer(modifier = Modifier.height(7.dp))
+                                Text(
+                                    text = "$selectedCategory 표지판이 서행 표지판으로 12회 오분류",
+                                    fontFamily = FontFamily(Font(R.font.pretendard_medium)),
+                                    fontSize = 13.sp
+                                )
+                            }
+                        }
+                    }
+                }
+            } else if (iconColor == Color(0xFFFFA500)) {
+                // 주황 원 클릭 시 데이터 표시
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(15.dp)
+                    ) {
+                        Row {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = "오분류 아이콘",
+                                tint = iconColor,
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .padding(top = 5.dp)
+                            )
+                            Spacer(modifier = Modifier.width(15.dp))
+                            Column {
+                                Text(
+                                    text = "서울특별시 노원구 동일로 207길 23",
+                                    fontFamily = FontFamily(Font(R.font.pretendard_medium)),
+                                    fontSize = 16.sp
+                                )
+                                Spacer(modifier = Modifier.height(7.dp))
+                                Text(
+                                    text = "$selectedCategory 표지판이 진입금지 표지판으로 5회 오분류",
+                                    fontFamily = FontFamily(Font(R.font.pretendard_medium)),
+                                    fontSize = 13.sp
+                                )
+                            }
+                        }
+                    }
+                    Divider(color = Color.Gray, thickness = 0.5.dp)
+                }
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(15.dp)
+                    ) {
+                        Row {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = "오분류 아이콘",
+                                tint = iconColor,
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .padding(top = 5.dp)
+                            )
+                            Spacer(modifier = Modifier.width(15.dp))
+                            Column {
+                                Text(
+                                    text = "서울특별시 노원구 동일로 207길 23",
+                                    fontFamily = FontFamily(Font(R.font.pretendard_medium)),
+                                    fontSize = 16.sp
+                                )
+                                Spacer(modifier = Modifier.height(7.dp))
+                                Text(
+                                    text = "$selectedCategory 표지판이 좌회전 금지 표지판으로 4회 오분류",
+                                    fontFamily = FontFamily(Font(R.font.pretendard_medium)),
+                                    fontSize = 13.sp
+                                )
+                            }
+                        }
+                    }
+                    Divider(color = Color.Gray, thickness = 0.5.dp)
+                }
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(15.dp)
+                    ) {
+                        Row {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = "오분류 아이콘",
+                                tint = iconColor,
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .padding(top = 5.dp)
+                            )
+                            Spacer(modifier = Modifier.width(15.dp))
+                            Column {
+                                Text(
+                                    text = "서울특별시 노원구 동일로 207길 23",
+                                    fontFamily = FontFamily(Font(R.font.pretendard_medium)),
+                                    fontSize = 16.sp
+                                )
+                                Spacer(modifier = Modifier.height(7.dp))
+                                Text(
+                                    text = "$selectedCategory 표지판이 우회전 표지판으로 3회 오분류",
+                                    fontFamily = FontFamily(Font(R.font.pretendard_medium)),
+                                    fontSize = 13.sp
+                                )
+                            }
+                        }
+                    }
+                    Divider(color = Color.Gray, thickness = 0.5.dp)
+                }
+            } else if (iconColor == Color(0xFFE0C200)) {
+                // 노란 원 클릭 시 데이터 표시
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(15.dp)
+                    ) {
+                        Row {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = "오분류 아이콘",
+                                tint = iconColor,
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .padding(top = 5.dp)
+                            )
+                            Spacer(modifier = Modifier.width(15.dp))
+                            Column {
+                                Text(
+                                    text = "서울특별시 노원구 동일로 1280",
+                                    fontFamily = FontFamily(Font(R.font.pretendard_medium)),
+                                    fontSize = 16.sp
+                                )
+                                Spacer(modifier = Modifier.height(7.dp))
+                                Text(
+                                    text = "$selectedCategory 표지판이 진입금지 표지판으로 4회 오분류",
+                                    fontFamily = FontFamily(Font(R.font.pretendard_medium)),
+                                    fontSize = 13.sp
+                                )
+                            }
+                        }
+                    }
+                    Divider(color = Color.Gray, thickness = 0.5.dp)
+                }
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(15.dp)
+                    ) {
+                        Row {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = "오분류 아이콘",
+                                tint = iconColor,
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .padding(top = 5.dp)
+                            )
+                            Spacer(modifier = Modifier.width(15.dp))
+                            Column {
+                                Text(
+                                    text = "서울특별시 노원구 동일로 1280",
+                                    fontFamily = FontFamily(Font(R.font.pretendard_medium)),
+                                    fontSize = 16.sp
+                                )
+                                Spacer(modifier = Modifier.height(7.dp))
+                                Text(
+                                    text = "$selectedCategory 표지판이 우회전 표지판으로 3회 오분류",
+                                    fontFamily = FontFamily(Font(R.font.pretendard_medium)),
+                                    fontSize = 13.sp
+                                )
+                            }
+                        }
+                    }
+                    Divider(color = Color.Gray, thickness = 0.5.dp)
+                }
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(15.dp)
+                    ) {
+                        Row {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = "오분류 아이콘",
+                                tint = iconColor,
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .padding(top = 5.dp)
+                            )
+                            Spacer(modifier = Modifier.width(15.dp))
+                            Column {
+                                Text(
+                                    text = "서울특별시 노원구 동일로 1280",
+                                    fontFamily = FontFamily(Font(R.font.pretendard_medium)),
+                                    fontSize = 16.sp
+                                )
+                                Spacer(modifier = Modifier.height(7.dp))
+                                Text(
+                                    text = "$selectedCategory 표지판이 서행 표지판으로 2회 오분류",
+                                    fontFamily = FontFamily(Font(R.font.pretendard_medium)),
+                                    fontSize = 13.sp
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
