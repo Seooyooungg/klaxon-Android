@@ -1,16 +1,20 @@
 package com.bestdriver.aaa_klaxon.home
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -28,23 +32,37 @@ import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.bestdriver.aaa_klaxon.R
 import com.bestdriver.aaa_klaxon.community.ThinHorizontalLine
+import com.bestdriver.aaa_klaxon.network.home.MapViewModel
 import com.bestdriver.aaa_klaxon.ui.theme.MyPurple
 
 
@@ -147,7 +165,21 @@ fun TitleCard(navController: NavController) {
 
 
 @Composable
-fun MapCard() {
+fun MapCard(navController: NavController) {
+    val viewModel: MapViewModel = viewModel()
+
+    LaunchedEffect(Unit) {
+        viewModel.fetchTrafficErrors()
+    }
+
+    val trafficData by viewModel.trafficData.collectAsState()
+    var selectedCategory by remember { mutableStateOf("") }
+
+    val sortedTrafficData = trafficData.sortedBy { it.count }
+    val minData = sortedTrafficData.firstOrNull()
+    val maxData = sortedTrafficData.lastOrNull()
+    val midData = if (sortedTrafficData.size > 2) sortedTrafficData[1] else null
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -156,86 +188,133 @@ fun MapCard() {
         Text(
             text = "실시간 정보",
             style = TextStyle(
-                fontSize = 25.sp, // 텍스트 크기 설정
-                fontFamily = FontFamily(Font(R.font.pretendard_semibold)), // 텍스트 굵기 설정
+                fontSize = 25.sp,
+                fontFamily = FontFamily(Font(R.font.pretendard_semibold))
             )
         )
 
-        Row(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
+                .height(330.dp)
+                .padding(top = 8.dp)
         ) {
-            // 왼쪽에 주소 텍스트
-            Text(
-                text = "서울특별시 도봉구 삼양로144길 33",
-                style = TextStyle(
-                    fontSize = 15.sp,
-                    fontFamily = FontFamily(Font(R.font.pretendard_medium)),
-                    color = Color.Gray
-                )
+            Image(
+                painter = painterResource(id = R.drawable.realmap),
+                contentDescription = "지도",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
             )
-            Row {
-                Icon(
-                    imageVector = Icons.Default.Place,
-                    contentDescription = "내 위치 아이콘",
+
+            if (trafficData.isNotEmpty()) {
+                // 빨간 원 (가장 큰 count)
+                Box(
                     modifier = Modifier
-                        .size(20.dp)
-                        .padding(top = 5.dp)
-                )
-                Spacer(modifier = Modifier.width(4.dp)) // 아이콘과 텍스트 사이의 여백
-                Text(
-                    text = "내위치",
+                        .size(60.dp)
+                        .absoluteOffset(x = 165.dp, y = 115.dp)
+                        .clickable {
+                            selectedCategory = maxData?.misrecognized_sign_name ?: ""
+                        }
+                ) {
+                    DrawCircleWithBorder(
+                        fillColor = Color.Red,
+                        borderColor = Color.Red,
+                        fillAlpha = 0.4f,
+                        radius = 30.dp,
+                        borderWidth = 2.dp
+                    ) {
+                        Text(
+                            text = "${maxData?.count ?: 0}",
+                            fontSize = 17.sp,
+                            color = Color.Black,
+                            fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+                    }
+                }
+
+                // 주황 원 (중간 값)
+                Box(
                     modifier = Modifier
-                        .padding(top = 5.dp),
-                    style = TextStyle(
-                        fontSize = 15.sp,
-                        fontFamily = FontFamily(Font(R.font.pretendard_medium)),
-                        color = Color.Gray
-                    )
-                )
+                        .size(40.dp)
+                        .absoluteOffset(x = 80.dp, y = 125.dp)
+                        .clickable {
+                            selectedCategory = midData?.misrecognized_sign_name ?: ""
+                        }
+                ) {
+                    DrawCircleWithBorder(
+                        fillColor = Color(0xFFFFA500),
+                        borderColor = Color(0xFFFFA500),
+                        fillAlpha = 0.4f,
+                        radius = 20.dp,
+                        borderWidth = 2.dp
+                    ) {
+                        Text(
+                            text = "${midData?.count ?: 0}",
+                            fontSize = 17.sp,
+                            color = Color.Black,
+                            fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+                    }
+                }
+
+                // 노란 원 (가장 작은 count)
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .absoluteOffset(x = 175.dp, y = 230.dp)
+                        .clickable {
+                            selectedCategory = minData?.misrecognized_sign_name ?: ""
+                        }
+                ) {
+                    DrawCircleWithBorder(
+                        fillColor = Color(0xFFE0C200),
+                        borderColor = Color(0xFFE0C200),
+                        fillAlpha = 0.4f,
+                        radius = 20.dp,
+                        borderWidth = 2.dp
+                    ) {
+                        Text(
+                            text = "${minData?.count ?: 0}",
+                            fontSize = 17.sp,
+                            color = Color.Black,
+                            fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+                    }
+                }
             }
         }
 
-        Image(
-            painter = painterResource(id = R.drawable.map),
-            contentDescription = "지도",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(280.dp)// 가로 폭에 맞게 조정
-                .padding(top = 8.dp) // 상단 여백 추가
-        )
+        ListCard(selectedCategory)
     }
 }
 
+
+
+
 @Composable
-fun ListCard() {
+fun ListCard(selectedCategory: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
             .padding(top = 16.dp)
             .shadow(7.dp, RoundedCornerShape(9.dp))
             .background(
                 color = Color.White, shape = RoundedCornerShape(12.dp)
             )
             .height(310.dp)
-
-
-
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(15.dp),
-
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
-        ){
+        ) {
             Text(
-                text = "오분류가 많은 지역",
+                text = "$selectedCategory 오분류 지역",
                 style = TextStyle(
                     fontSize = 20.sp,
                     fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
@@ -314,6 +393,7 @@ fun ListCard() {
 
         }
 
+        // 표시할 데이터에 따른 목록을 업데이트
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
@@ -337,20 +417,18 @@ fun ListCard() {
                         Spacer(modifier = Modifier.width(15.dp))
                         Column {
                             Text(
-                                text = "서울특별시 강북구 4.19로",
+                                text = "$selectedCategory 오분류 지역 1",
                                 fontFamily = FontFamily(Font(R.font.pretendard_medium)),
                                 fontSize = 16.sp
                             )
                             Spacer(modifier = Modifier.height(7.dp))
                             Text(
-                                text = "우회전 표지판 인식 결과 80% 오분류",
+                                text = "$selectedCategory 오분류가 발생한 상세 설명",
                                 fontFamily = FontFamily(Font(R.font.pretendard_medium)),
                                 fontSize = 13.sp
                             )
                         }
-
                     }
-
                 }
                 Divider(
                     color = Color.Gray,
@@ -437,6 +515,45 @@ fun ListCard() {
     }
 }
 
+@Composable
+fun DrawCircleWithBorder(
+    modifier: Modifier = Modifier,
+    fillColor: Color,
+    borderColor: Color,
+    fillAlpha: Float = 1f,
+    radius: Dp,
+    borderWidth: Dp,
+    content: @Composable () -> Unit = {}
+) {
+    val density = LocalDensity.current
+    val radiusPx = with(density) { radius.toPx() }
+    val borderWidthPx = with(density) { borderWidth.toPx() }
+
+    Canvas(modifier = modifier.size(radius * 2)) {
+        // 원을 그리기
+        drawCircle(
+            color = fillColor.copy(alpha = fillAlpha),
+            radius = radiusPx,
+            center = Offset(size.width / 2, size.height / 2) // 중앙에 배치
+        )
+
+        // 테두리를 그리기
+        drawCircle(
+            color = borderColor,
+            radius = radiusPx,
+            center = Offset(size.width / 2, size.height / 2), // 중앙에 배치
+            style = Stroke(width = borderWidthPx)
+        )
+    }
+
+    Box(
+        modifier = Modifier
+            .size(radius * 2),
+        contentAlignment = Alignment.Center // 텍스트를 원의 중앙에 배치
+    ) {
+        content() // 원 중앙에 텍스트를 배치
+    }
+}
 
 @Composable
 fun MyScreen(navController: NavController) {
@@ -446,16 +563,15 @@ fun MyScreen(navController: NavController) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         TitleCard(navController)
-        LazyColumn() {
-            item {
-                MapCard()
-            }
-            item {
-                ListCard()
-            }
-        }
+
+        // 지도와 리스트를 순차적으로 표시 (MapCard 내부에서 상태 관리)
+        MapCard(
+            navController = navController
+        )
     }
 }
+
+
 
 
 
