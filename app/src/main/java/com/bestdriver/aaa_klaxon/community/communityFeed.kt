@@ -193,7 +193,7 @@ fun PostItem(post: Post, viewModel: CommunityWriteScreenViewModel) {
         }
     }
 
-    Spacer(modifier = Modifier.height(10.dp))
+    Spacer(modifier = Modifier.height(15.dp))
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -201,7 +201,7 @@ fun PostItem(post: Post, viewModel: CommunityWriteScreenViewModel) {
     ) {
         Text(
             text = post.title,
-            fontSize = 28.sp,
+            fontSize = 25.sp,
             fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
             color = Color.Black
         )
@@ -209,7 +209,7 @@ fun PostItem(post: Post, viewModel: CommunityWriteScreenViewModel) {
             imageVector = if (isLiked.value) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
             contentDescription = "Favorite",
             modifier = Modifier
-                .size(35.dp)
+                .size(30.dp)
                 .clickable {
                     coroutineScope.launch {
                         isLiked.value = !isLiked.value
@@ -226,12 +226,12 @@ fun PostItem(post: Post, viewModel: CommunityWriteScreenViewModel) {
     }
     Text(
         text = post.main_text,
-        fontSize = 20.sp,
+        fontSize = 18.sp,
         fontFamily = FontFamily(Font(R.font.pretendard_medium)),
         color = Color.Black,
         modifier = Modifier
-            .padding(top = 10.dp)
-            .padding(bottom = 15.dp)
+            .padding(top = 13.dp)
+            .padding(bottom = 10.dp)
     )
     Row(
         modifier = Modifier
@@ -270,7 +270,7 @@ fun PostItem(post: Post, viewModel: CommunityWriteScreenViewModel) {
             fontFamily = FontFamily(Font(R.font.pretendard_regular)),
             color = Color.Black,
             modifier = Modifier
-                .padding(bottom = 30.dp)
+                .padding(bottom = 10.dp)
         )
     }
 }
@@ -280,17 +280,17 @@ fun CommentItem(comment: Comment) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 30.dp)
+            .padding(top = 20.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth()
         ) {
             CircleCanvas(
-                modifier = Modifier.size(40.dp) // Canvas의 크기를 지정
+                modifier = Modifier.size(35.dp) // Canvas의 크기를 지정
             )
             Text(
                 text = comment.nickname,
-                fontSize = 20.sp,
+                fontSize = 19.sp,
                 fontFamily = FontFamily(Font(R.font.pretendard_regular)),
                 color = Color.Black,
                 modifier = Modifier
@@ -306,7 +306,7 @@ fun CommentItem(comment: Comment) {
             modifier = Modifier.padding(top = 10.dp)
         )
         Row(
-            modifier = Modifier.padding(top = 8.dp)
+            modifier = Modifier.padding(top = 8.dp, bottom = 12.dp)
         ) {
             Text(
                 text = comment.createdAt, // createdAt으로 변경

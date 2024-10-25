@@ -320,7 +320,10 @@ fun PopularCard(
                     fontSize = 18.sp,
                     fontFamily = FontFamily(Font(R.font.pretendard_medium)),
                     color = Color.Black,
+                    maxLines = 1, // 한 줄만 표시
+                    overflow = TextOverflow.Ellipsis, // 넘칠 경우 생략 부호(...) 추가
                     modifier = Modifier.fillMaxWidth()
+
                 )
             }
             Row(
