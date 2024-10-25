@@ -16,11 +16,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.paddingFromBaseline
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
@@ -45,6 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
@@ -168,7 +171,7 @@ fun TitleCard(navController: NavController) {
 
 
 @Composable
-fun MapCard(navController: NavController) {
+fun MapCard(navController: NavController, trafficData: List<TrafficError>) {
     val viewModel: MapViewModel = viewModel()
 
     LaunchedEffect(Unit) {
@@ -184,14 +187,26 @@ fun MapCard(navController: NavController) {
     val maxData = sortedTrafficData.lastOrNull()   // misrecognition_rate가 가장 높은 데이터
     val midData = if (sortedTrafficData.size > 2) sortedTrafficData[1] else null  // 중간 값
 
+    // 선택된 데이터에 맞는 텍스트 생성
+    val selectedData = when (selectedColor) {
+        Color.Red -> maxData
+        Color(0xFFFFA500) -> midData
+        Color(0xFFE0C200) -> minData
+        else -> null
+    }
+
+    val bubbleText = selectedData?.let { data ->
+        "${data.recognized_sign_name}\n인식 횟수 : ${data.recognized_count}\n오인식 횟수 : ${data.misrecognition_count}"
+    } ?: ""
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(), // Row를 화면 너비로 채우기
-            horizontalArrangement = Arrangement.SpaceBetween, // 양쪽 끝에 배치
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
@@ -204,17 +219,16 @@ fun MapCard(navController: NavController) {
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.End // 오른쪽에 텍스트와 아이콘 배치
+                horizontalArrangement = Arrangement.End
             ) {
                 Text(
                     text = "새로고침",
                     style = TextStyle(
                         fontSize = 15.sp,
                         fontFamily = FontFamily(Font(R.font.pretendard_medium)),
-                        color = Color.Gray // 텍스트 색상
+                        color = Color.Gray
                     ),
                     modifier = Modifier.clickable {
-                        // 새로고침 동작 (HomeView로 이동)
                         navController.navigate("main") {
                             popUpTo("main") { inclusive = true }
                         }
@@ -227,9 +241,8 @@ fun MapCard(navController: NavController) {
                     tint = Color.Gray,
                     modifier = Modifier
                         .size(23.dp)
-                        .padding(start = 3.dp) // 텍스트와 아이콘 사이에 약간의 간격
+                        .padding(start = 3.dp)
                         .clickable {
-                            // 아이콘 클릭 시에도 새로고침 (HomeView로 이동)
                             navController.navigate("main") {
                                 popUpTo("main") { inclusive = true }
                             }
@@ -252,14 +265,14 @@ fun MapCard(navController: NavController) {
             )
 
             if (trafficData.isNotEmpty()) {
-                // 빨간 원 (misrecognition_rate가 가장 높은 데이터)
+                // 빨간 원
                 Box(
                     modifier = Modifier
                         .size(60.dp)
                         .absoluteOffset(x = 165.dp, y = 115.dp)
                         .clickable {
                             selectedSignName = maxData?.recognized_sign_name ?: "Unknown"
-                            selectedColor = Color.Red // 빨간색 원 선택 시
+                            selectedColor = Color.Red
                         }
                 ) {
                     DrawCircleWithBorder(
@@ -279,14 +292,14 @@ fun MapCard(navController: NavController) {
                     }
                 }
 
-                // 주황 원 (중간 값)
+                // 주황 원
                 Box(
                     modifier = Modifier
                         .size(40.dp)
                         .absoluteOffset(x = 80.dp, y = 125.dp)
                         .clickable {
                             selectedSignName = midData?.recognized_sign_name ?: "Unknown"
-                            selectedColor = Color(0xFFFFA500) // 주황색 원 선택 시
+                            selectedColor = Color(0xFFFFA500)
                         }
                 ) {
                     DrawCircleWithBorder(
@@ -306,14 +319,14 @@ fun MapCard(navController: NavController) {
                     }
                 }
 
-                // 노란 원 (misrecognition_rate가 가장 낮은 데이터)
+                // 노란 원
                 Box(
                     modifier = Modifier
                         .size(40.dp)
-                        .absoluteOffset(x = 175.dp, y = 230.dp)
+                        .absoluteOffset(x = 300.dp, y = 120.dp)
                         .clickable {
                             selectedSignName = minData?.recognized_sign_name ?: "Unknown"
-                            selectedColor = Color(0xFFE0C200) // 노란색 원 선택 시
+                            selectedColor = Color(0xFFE0C200)
                         }
                 ) {
                     DrawCircleWithBorder(
@@ -332,10 +345,40 @@ fun MapCard(navController: NavController) {
                         )
                     }
                 }
+
+                // 선택된 원 위에 'bubble' 이미지와 텍스트 추가
+                if (selectedColor != Color.Black) {
+                    val bubbleOffset = when (selectedColor) {
+                        Color.Red -> Modifier.absoluteOffset(x = 114.dp, y = 2.dp)
+                        Color(0xFFFFA500) -> Modifier.absoluteOffset(x = 20.dp, y = 9.dp)
+                        Color(0xFFE0C200) -> Modifier.absoluteOffset(x = 241.dp, y = 7.dp)
+                        else -> Modifier
+                    }
+
+                    Box(
+                        modifier = bubbleOffset.size(160.dp)
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.bubble),
+                            contentDescription = "Bubble 이미지",
+                            modifier = Modifier.fillMaxSize()
+                        )
+
+                        Text(
+                            text = bubbleText,
+                            color = Color.Black,
+                            fontSize = 13.sp,
+                            fontFamily = FontFamily(Font(R.font.pretendard_medium)),
+                            lineHeight = 17.sp,
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .padding(bottom = 5.dp)
+                        )
+                    }
+                }
             }
         }
 
-        // 선택된 원에 맞는 카테고리와 색상으로 ListCard 표시
         ListCard(selectedSignName = selectedSignName, iconColor = selectedColor, trafficData = trafficData)
     }
 }
@@ -354,233 +397,162 @@ fun ListCard(selectedSignName: String, iconColor: Color, trafficData: List<Traff
             )
             .height(310.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(15.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "$selectedSignName 오분류 결과",
-                style = TextStyle(
-                    fontSize = 20.sp,
-                    fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
-                    fontWeight = FontWeight.SemiBold
-                )
-            )
-
-            Row(
-                modifier = Modifier
-            )
-            {
-                Text(
-                    text = "많음",
-                    modifier = Modifier
-                        .padding(top = 3.dp),
-                    style = TextStyle(
-                        fontSize = 15.sp,
-                        fontFamily = FontFamily(Font(R.font.pretendard_medium)),
-                        color = Color.Red
-                    )
-                )
-
-                Icon(
-                    imageVector = Icons.Default.Info,
-                    contentDescription = "오분류 아이콘",
-                    tint = Color.Red,
-                    modifier = Modifier
-                        .size(20.dp)
-                        .padding(top = 5.dp)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-
-                Text(
-                    text = "보통",
-                    modifier = Modifier
-                        .padding(top = 3.dp),
-                    style = TextStyle(
-                        fontSize = 15.sp,
-                        fontFamily = FontFamily(Font(R.font.pretendard_medium)),
-                        color = Color(0xFFFFA500)
-                    )
-                )
-
-                Icon(
-                    imageVector = Icons.Default.Info,
-                    contentDescription = "오분류 아이콘",
-                    tint = Color(0xFFFFA500),
-                    modifier = Modifier
-                        .size(20.dp)
-                        .padding(top = 5.dp)
-
-                )
-
-                Spacer(modifier = Modifier.width(4.dp))
-
-                Text(
-                    text = "적음",
-                    modifier = Modifier
-                        .padding(top = 3.dp),
-                    style = TextStyle(
-                        fontSize = 15.sp,
-                        fontFamily = FontFamily(Font(R.font.pretendard_medium)),
-                        color = Color(0xFFE0C200)
-                    )
-                )
-
-                Icon(
-                    imageVector = Icons.Default.Info,
-                    contentDescription = "오분류 아이콘",
-                    tint = Color(0xFFE0C200),
-                    modifier = Modifier
-                        .size(20.dp)
-                        .padding(top = 5.dp)
-                )
-
-            }
-
-        }
-
-        // 표시할 데이터에 따른 목록을 업데이트
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 5.dp)
         ) {
-            if (selectedSignName.isEmpty()) {
-                // 빨간색, 주황색, 노란색 순서로 아이템을 표시
-                val colorOrder = listOf(Color.Red, Color(0xFFFFA500), Color(0xFFE0C200))
+            // Row 부분을 item으로 감싸서 LazyColumn의 첫 번째 아이템으로 표시
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(15.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "오분류 결과",
+                        style = TextStyle(
+                            fontSize = 20.sp,
+                            fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    )
 
-                // colorOrder와 trafficData를 매칭하여 순회
-                colorOrder.zip(trafficData).forEach { (color, trafficError) ->
-                    item {
-                        Column(
+                    Row(
+                        modifier = Modifier
+                    ) {
+                        Text(
+                            text = "많음",
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(15.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween, // 텍스트와 이미지를 양 끝에 배치
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Row {
-                                    Icon(
-                                        imageVector = Icons.Default.Info,
-                                        contentDescription = "오분류 아이콘",
-                                        tint = iconColor,
-                                        modifier = Modifier
-                                            .size(20.dp)
-                                            .padding(top = 5.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(15.dp))
-                                    Column {
-                                        Text(
-                                            text = getAddressByColor(iconColor),
-                                            fontFamily = FontFamily(Font(R.font.pretendard_medium)),
-                                            fontSize = 16.sp
-                                        )
-                                        Spacer(modifier = Modifier.height(7.dp))
+                                .padding(top = 3.dp),
+                            style = TextStyle(
+                                fontSize = 15.sp,
+                                fontFamily = FontFamily(Font(R.font.pretendard_medium)),
+                                color = Color.Red
+                            )
+                        )
 
-                                        // Text 내용 수정
-                                        Text(
-                                            text = "${trafficError.recognized_sign_name ?: "Unknown"} 표지판 인식 결과 ${trafficError.misrecognition_rate ?: 0} 오분류",
-                                            fontFamily = FontFamily(Font(R.font.pretendard_medium)),
-                                            fontSize = 13.sp
-                                        )
-                                    }
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "오분류 아이콘",
+                            tint = Color.Red,
+                            modifier = Modifier
+                                .size(20.dp)
+                                .padding(top = 5.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+
+                        Text(
+                            text = "보통",
+                            modifier = Modifier
+                                .padding(top = 3.dp),
+                            style = TextStyle(
+                                fontSize = 15.sp,
+                                fontFamily = FontFamily(Font(R.font.pretendard_medium)),
+                                color = Color(0xFFFFA500)
+                            )
+                        )
+
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "오분류 아이콘",
+                            tint = Color(0xFFFFA500),
+                            modifier = Modifier
+                                .size(20.dp)
+                                .padding(top = 5.dp)
+                        )
+
+                        Spacer(modifier = Modifier.width(4.dp))
+
+                        Text(
+                            text = "적음",
+                            modifier = Modifier
+                                .padding(top = 3.dp),
+                            style = TextStyle(
+                                fontSize = 15.sp,
+                                fontFamily = FontFamily(Font(R.font.pretendard_medium)),
+                                color = Color(0xFFE0C200)
+                            )
+                        )
+
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "오분류 아이콘",
+                            tint = Color(0xFFE0C200),
+                            modifier = Modifier
+                                .size(20.dp)
+                                .padding(top = 5.dp)
+                        )
+                    }
+                }
+            }
+
+            // 표시할 데이터에 따른 목록을 업데이트
+            val colorOrder = listOf(Color.Red, Color(0xFFFFA500), Color(0xFFE0C200))
+
+            // colorOrder와 trafficData를 매칭하여 순회
+            colorOrder.zip(trafficData).forEach { (color, trafficError) ->
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(15.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row {
+                                Icon(
+                                    imageVector = Icons.Default.Info,
+                                    contentDescription = "오분류 아이콘",
+                                    tint = color,
+                                    modifier = Modifier
+                                        .size(20.dp)
+                                        .padding(top = 5.dp)
+                                )
+                                Spacer(modifier = Modifier.width(15.dp))
+                                Column {
+                                    Text(
+                                        text = getAddressByColor(color),
+                                        fontFamily = FontFamily(Font(R.font.pretendard_medium)),
+                                        fontSize = 16.sp
+                                    )
+                                    Spacer(modifier = Modifier.height(7.dp))
+
+                                    // Text 내용 수정
+                                    Text(
+                                        text = "${trafficError.recognized_sign_name ?: "Unknown"} 표지판 인식 결과 ${trafficError.misrecognition_rate ?: 0} 오분류",
+                                        fontFamily = FontFamily(Font(R.font.pretendard_medium)),
+                                        fontSize = 13.sp
+                                    )
+                                }
+                            }
+
+                            // recognized_sign_name에 따라 이미지 결정
+                            val imageResource =
+                                when (trafficError.recognized_sign_name ?: "Unknown") {
+                                    "right" -> R.drawable.right
+                                    "notEnter" -> R.drawable.notenter
+                                    "notLeft" -> R.drawable.notleft
+                                    "slow" -> R.drawable.slow
+                                    else -> R.drawable.right // 기본 이미지
                                 }
 
-                                // recognized_sign_name에 따라 이미지 결정
-                                val imageResource =
-                                    when (trafficError.recognized_sign_name ?: "Unknown") {
-                                        "right" -> R.drawable.right
-                                        "notEnter" -> R.drawable.notenter
-                                        "notLeft" -> R.drawable.notleft
-                                        "slow" -> R.drawable.slow
-                                        else -> R.drawable.right // 기본 이미지
-                                    }
+                            // 이미지 삽입 (오른쪽에 배치)
+                            Image(
+                                painter = painterResource(id = imageResource),
+                                contentDescription = "${trafficError.recognized_sign_name ?: "Unknown"} 이미지",
+                                modifier = Modifier
+                                    .size(60.dp)
+                                    .padding(start = 15.dp) // 텍스트와의 간격
+                            )
+                        }
+                    }
 
-                                // 이미지 삽입 (오른쪽에 배치)
-                                Image(
-                                    painter = painterResource(id = imageResource),
-                                    contentDescription = "${trafficError.recognized_sign_name ?: "Unknown"} 이미지",
-                                    modifier = Modifier
-                                        .size(60.dp)
-                                        .padding(start = 15.dp) // 텍스트와의 간격
-                                )
-                            }
-                        }
-                        Divider(color = Color.Gray, thickness = 0.5.dp)
-                    }
-                }
-            } else {
-                // 선택된 색상에 맞는 데이터 표시
-                items(trafficData) { trafficError ->
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(15.dp)
-                    ) {
-                        Row {
-                            Icon(
-                                imageVector = Icons.Default.Info,
-                                contentDescription = "오분류 아이콘",
-                                tint = iconColor,
-                                modifier = Modifier
-                                    .size(20.dp)
-                                    .padding(top = 5.dp)
-                            )
-                            Spacer(modifier = Modifier.width(15.dp))
-                            Column {
-                                Text(
-                                    text = getAddressByColor(iconColor),
-                                    fontFamily = FontFamily(Font(R.font.pretendard_medium)),
-                                    fontSize = 16.sp
-                                )
-                                Spacer(modifier = Modifier.height(7.dp))
-                                Text(
-                                    text = "${trafficError.recognized_sign_name ?: "Unknown"} 표지판이 ${trafficError.recognized_count ?: 0}번 인식되었습니다.",
-                                    fontFamily = FontFamily(Font(R.font.pretendard_medium)),
-                                    fontSize = 13.sp
-                                )
-                            }
-                        }
-                    }
-                    Divider(color = Color.Gray, thickness = 0.5.dp)
-                }
-                items(trafficData) { trafficError ->
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(15.dp)
-                    ) {
-                        Row {
-                            Icon(
-                                imageVector = Icons.Default.Info,
-                                contentDescription = "오분류 아이콘",
-                                tint = iconColor,
-                                modifier = Modifier
-                                    .size(20.dp)
-                                    .padding(top = 5.dp)
-                            )
-                            Spacer(modifier = Modifier.width(15.dp))
-                            Column {
-                                Text(
-                                    text = getAddressByColor(iconColor),
-                                    fontFamily = FontFamily(Font(R.font.pretendard_medium)),
-                                    fontSize = 16.sp
-                                )
-                                Spacer(modifier = Modifier.height(7.dp))
-                                Text(
-                                    text = "${trafficError.recognized_sign_name ?: "Unknown"} 표지판이 ${trafficError.misrecognition_count ?: 0}번 오분류되었습니다.",
-                                    fontFamily = FontFamily(Font(R.font.pretendard_medium)),
-                                    fontSize = 13.sp
-                                )
-                            }
-                        }
-                    }
                     Divider(color = Color.Gray, thickness = 0.5.dp)
                 }
             }
@@ -588,7 +560,8 @@ fun ListCard(selectedSignName: String, iconColor: Color, trafficData: List<Traff
     }
 }
 
-// 원의 색상에 따라 주소를 반환하는 함수
+
+        // 원의 색상에 따라 주소를 반환하는 함수
 fun getAddressByColor(iconColor: Color): String {
     return when (iconColor) {
         Color.Red -> "서울특별시 노원구 동일로 207길 18"
@@ -640,6 +613,9 @@ fun DrawCircleWithBorder(
 
 @Composable
 fun MyScreen(navController: NavController) {
+    val viewModel: MapViewModel = viewModel() // ViewModel 인스턴스 생성
+    val trafficData by viewModel.trafficData.collectAsState(emptyList()) // ViewModel에서 trafficData 상태를 관찰
+
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
@@ -647,12 +623,14 @@ fun MyScreen(navController: NavController) {
     ) {
         TitleCard(navController)
 
-        // 지도와 리스트를 순차적으로 표시 (MapCard 내부에서 상태 관리)
+        // trafficData를 MapCard에 전달
         MapCard(
-            navController = navController
+            navController = navController,
+            trafficData = trafficData // ViewModel에서 가져온 데이터 전달
         )
     }
 }
+
 
 
 
