@@ -43,6 +43,8 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,6 +57,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -75,22 +78,31 @@ import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Locale
 
-
-
 @Composable
 fun CommunityFeedScreen(
     navController: NavController,
     viewModel: CommunityWriteScreenViewModel,
     postId: Int // 게시글 ID
 ) {
-    // TokenManager 인스턴스 가져오기
-    val context = LocalContext.current
-    val tokenManager = TokenManager(context)
-    val token = "Bearer ${tokenManager.getToken() ?: ""}" // 토큰 가져오기
+    // 네비게이션을 위한 상태 변수
+    var isNavigatingBack by remember { mutableStateOf(false) }
 
+    // 최신 데이터를 불러오기 위해 postId가 변경될 때마다 fetch 호출
     LaunchedEffect(postId) {
+//        viewModel.clearSelectedPost() // 선택된 게시글 상태 초기화
         viewModel.fetchPostById(postId)
         viewModel.fetchCommentsForPost(postId)
+    }
+
+    // 뒤로 가기 트리거가 설정되면 데이터 다시 불러오기 후 네비게이션
+    LaunchedEffect(isNavigatingBack) {
+        if (isNavigatingBack) {
+            viewModel.fetchPostById(postId)
+            navController.navigate("communityHome") {
+                popUpTo("communityHome") { inclusive = true }
+            }
+            isNavigatingBack = false // 초기화
+        }
     }
 
     val post by viewModel.selectedPost.collectAsState()
@@ -113,7 +125,9 @@ fun CommunityFeedScreen(
                     modifier = Modifier
                         .size(35.dp)
                         .padding(top = 10.dp)
-                        .clickable { navController.navigateUp() },
+                        .clickable {
+                            isNavigatingBack = true // 뒤로 가기 상태를 true로 설정
+                        },
                     tint = Color.Black
                 )
             }
@@ -149,31 +163,23 @@ fun CommunityFeedScreen(
         }
 
         // 댓글 입력란을 LazyColumn의 아래에 고정
-        CommentSection(viewModel, post?.post_id ?: -1, token) // token 전달
+        CommentSection(viewModel, post?.post_id ?: -1) // token 파라미터 제거
     }
 }
 
-
-
-
-
-
-
 @Composable
 fun PostItem(post: Post, viewModel: CommunityWriteScreenViewModel) {
-    val isLiked = remember { mutableStateOf(false) }
-    val likeCount = remember { mutableStateOf(post.like_count) }
+    val isLiked = rememberSaveable { mutableStateOf(false) }
+    val likeCount = rememberSaveable { mutableStateOf(post.like_count) }
+    val coroutineScope = rememberCoroutineScope()
 
-    val coroutineScope = rememberCoroutineScope() // Coroutine scope 생성
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 10.dp)
     ) {
-        CircleCanvas(
-            modifier = Modifier.size(60.dp)
-        )
+        CircleCanvas(modifier = Modifier.size(60.dp))
         Column(modifier = Modifier.padding(start = 20.dp)) {
             Text(
                 text = post.nickname,
@@ -182,18 +188,17 @@ fun PostItem(post: Post, viewModel: CommunityWriteScreenViewModel) {
                 color = Color.Black,
                 modifier = Modifier.padding(bottom = 5.dp)
             )
-            Row {
-                Text(
-                    text = post.createdAt.split(" ")[0],
-                    fontSize = 17.sp,
-                    fontFamily = FontFamily(Font(R.font.pretendard_regular)),
-                    color = Color.Black.copy(alpha = 0.5f)
-                )
-            }
+            Text(
+                text = post.createdAt.split(" ")[0],
+                fontSize = 17.sp,
+                fontFamily = FontFamily(Font(R.font.pretendard_regular)),
+                color = Color.Black.copy(alpha = 0.5f)
+            )
         }
     }
 
     Spacer(modifier = Modifier.height(15.dp))
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -203,8 +208,14 @@ fun PostItem(post: Post, viewModel: CommunityWriteScreenViewModel) {
             text = post.title,
             fontSize = 25.sp,
             fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
-            color = Color.Black
+            color = Color.Black,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier
+                .weight(1f)
+                .padding(end = 8.dp)
         )
+
         Icon(
             imageVector = if (isLiked.value) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
             contentDescription = "Favorite",
@@ -215,24 +226,25 @@ fun PostItem(post: Post, viewModel: CommunityWriteScreenViewModel) {
                         isLiked.value = !isLiked.value
                         likeCount.value = if (isLiked.value) likeCount.value + 1 else likeCount.value - 1
                         if (isLiked.value) {
-                            viewModel.addLike(post.post_id) // 좋아요 추가
+                            viewModel.addLike(post.post_id)
                         } else {
-                            viewModel.removeLike(post.post_id) // 좋아요 취소
+                            viewModel.removeLike(post.post_id)
                         }
                     }
                 },
             tint = MyPurple
         )
     }
+
     Text(
         text = post.main_text,
         fontSize = 18.sp,
         fontFamily = FontFamily(Font(R.font.pretendard_medium)),
         color = Color.Black,
         modifier = Modifier
-            .padding(top = 13.dp)
-            .padding(bottom = 10.dp)
+            .padding(vertical = 10.dp)
     )
+
     Row(
         modifier = Modifier
             .padding(end = 10.dp)
@@ -247,14 +259,14 @@ fun PostItem(post: Post, viewModel: CommunityWriteScreenViewModel) {
         )
 
         Text(
-            text = likeCount.value.toString(), // 하트 클릭 횟수를 표시
+            text = likeCount.value.toString(),
             fontSize = 18.sp,
             fontFamily = FontFamily(Font(R.font.pretendard_regular)),
             color = Color.Black,
             modifier = Modifier
-                .padding(start = 4.dp)
-                .padding(end = 4.dp),
+                .padding(horizontal = 4.dp)
         )
+
         Icon(
             imageVector = Icons.Default.Person,
             contentDescription = "Chat",
@@ -265,7 +277,7 @@ fun PostItem(post: Post, viewModel: CommunityWriteScreenViewModel) {
         )
 
         Text(
-            text = post.comment_count.toString(), // 댓글 수를 표시
+            text = post.comment_count.toString(),
             fontSize = 18.sp,
             fontFamily = FontFamily(Font(R.font.pretendard_regular)),
             color = Color.Black,
@@ -274,6 +286,7 @@ fun PostItem(post: Post, viewModel: CommunityWriteScreenViewModel) {
         )
     }
 }
+
 
 @Composable
 fun CommentItem(comment: Comment) {
@@ -322,9 +335,10 @@ fun CommentItem(comment: Comment) {
 
 
 @Composable
-fun CommentSection(viewModel: CommunityWriteScreenViewModel, postId: Int, token: String) {
+fun CommentSection(viewModel: CommunityWriteScreenViewModel, postId: Int) {
     val commentText = remember { mutableStateOf("") }
     val coroutineScope = rememberCoroutineScope()
+    val comments = viewModel.comments.collectAsState() // ViewModel의 댓글 상태 관찰
 
     Box(
         modifier = Modifier
