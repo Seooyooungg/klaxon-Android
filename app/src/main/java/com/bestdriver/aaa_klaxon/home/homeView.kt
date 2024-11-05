@@ -4,7 +4,6 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,23 +13,15 @@ import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.paddingFromBaseline
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
@@ -47,7 +38,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
@@ -58,10 +48,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -178,26 +166,37 @@ fun MapCard(navController: NavController, trafficData: List<TrafficError>) {
         viewModel.fetchTrafficErrors()
     }
 
-    val trafficData by viewModel.trafficData.collectAsState(emptyList()) // null 방지
+    val trafficData by viewModel.trafficData.collectAsState(emptyList())
     var selectedSignName by remember { mutableStateOf("") }
-    var selectedColor by remember { mutableStateOf(Color.Black) } // 선택된 원의 색상
+    var selectedColor by remember { mutableStateOf(Color.Black) }
 
-    val sortedTrafficData = trafficData.sortedBy { it.misrecognition_rate } // null 안전 처리
-    val minData = sortedTrafficData.firstOrNull()  // misrecognition_rate가 가장 낮은 데이터
-    val maxData = sortedTrafficData.lastOrNull()   // misrecognition_rate가 가장 높은 데이터
-    val midData = if (sortedTrafficData.size > 2) sortedTrafficData[1] else null  // 중간 값
+    // 조건에 맞게 데이터를 필터링합니다.
+    val notEnterData = trafficData.find { it.recognized_sign_name == "notEnter" }
+    val rightData = trafficData.find { it.recognized_sign_name == "right" }
+    val slowData = trafficData.find { it.recognized_sign_name == "slow" }
+    val notLeftData = trafficData.find { it.recognized_sign_name == "notLeft" }
 
-    // 선택된 데이터에 맞는 텍스트 생성
-    val selectedData = when (selectedColor) {
-        Color.Red -> maxData
-        Color(0xFFFFA500) -> midData
-        Color(0xFFE0C200) -> minData
-        else -> null
-    }
+    // misrecognition_rate 순으로 정렬하여 색상 지정
+    val sortedTrafficData = listOfNotNull(notEnterData, rightData, slowData).sortedBy { it.misrecognition_rate }
+    val minData = sortedTrafficData.firstOrNull()
+    val midData = if (sortedTrafficData.size > 2) sortedTrafficData[1] else null
+    val maxData = sortedTrafficData.lastOrNull()
+
+//  선택된 데이터에 맞는 텍스트 생성
+//  val selectedColorData = when (selectedColor) {
+//      Color.Red -> maxData
+//      Color(0xFFFFA500) -> midData
+//  Color(0xFFE0C200) -> minData
+//  else -> null
+//  }
+
+    val selectedData = trafficData.find { it.recognized_sign_name == selectedSignName }
 
     val bubbleText = selectedData?.let { data ->
-        "${data.recognized_sign_name}\n인식 횟수 : ${data.recognized_count}\n오인식 횟수 : ${data.misrecognition_count}"
-    } ?: ""
+        "${data.recognized_sign_name ?: "unknown"}\n인식 횟수 : ${data.recognized_count ?: 0}\n오인식 횟수 : ${data.misrecognition_count ?: 0}"
+    } ?: "오분류 정보 없음\n인식 횟수 : 0\n오인식 횟수 : 0"
+
+
 
     Column(
         modifier = Modifier
@@ -219,7 +218,11 @@ fun MapCard(navController: NavController, trafficData: List<TrafficError>) {
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.End
+                modifier = Modifier.clickable {
+                    navController.navigate("main") {
+                        popUpTo("main") { inclusive = true }
+                    }
+                }
             ) {
                 Text(
                     text = "새로고침",
@@ -227,12 +230,7 @@ fun MapCard(navController: NavController, trafficData: List<TrafficError>) {
                         fontSize = 15.sp,
                         fontFamily = FontFamily(Font(R.font.pretendard_medium)),
                         color = Color.Gray
-                    ),
-                    modifier = Modifier.clickable {
-                        navController.navigate("main") {
-                            popUpTo("main") { inclusive = true }
-                        }
-                    }
+                    )
                 )
 
                 Icon(
@@ -242,11 +240,6 @@ fun MapCard(navController: NavController, trafficData: List<TrafficError>) {
                     modifier = Modifier
                         .size(23.dp)
                         .padding(start = 3.dp)
-                        .clickable {
-                            navController.navigate("main") {
-                                popUpTo("main") { inclusive = true }
-                            }
-                        }
                 )
             }
         }
@@ -265,26 +258,34 @@ fun MapCard(navController: NavController, trafficData: List<TrafficError>) {
             )
 
             if (trafficData.isNotEmpty()) {
-                // 빨간 원
+                // 각 위치에 고정된 recognized_sign_name에 따라 조건을 적용하여 원을 그립니다.
+
+                // right 위치에 해당하는 원
                 Box(
                     modifier = Modifier
-                        .size(60.dp)
-                        .absoluteOffset(x = 165.dp, y = 115.dp)
+                        .size(45.dp)
+                        .absoluteOffset(x = 48.dp, y = 10.dp)
                         .clickable {
-                            selectedSignName = maxData?.recognized_sign_name ?: "Unknown"
-                            selectedColor = Color.Red
+                            selectedSignName = rightData?.recognized_sign_name ?: "Unknown"
+                            selectedColor = if (rightData == maxData) Color.Red
+                            else if (rightData == midData) Color(0xFFFFA500)
+                            else Color(0xFFE0C200)
                         }
                 ) {
                     DrawCircleWithBorder(
-                        fillColor = Color.Red,
-                        borderColor = Color.Red,
+                        fillColor = if (rightData == maxData) Color.Red
+                        else if (rightData == midData) Color(0xFFFFA500)
+                        else Color(0xFFE0C200),
+                        borderColor = if (rightData == maxData) Color.Red
+                        else if (rightData == midData) Color(0xFFFFA500)
+                        else Color(0xFFE0C200),
                         fillAlpha = 0.4f,
-                        radius = 30.dp,
+                        radius = 25.dp,
                         borderWidth = 2.dp
                     ) {
                         Text(
-                            text = "${maxData?.misrecognition_rate ?: 0}",
-                            fontSize = 15.sp,
+                            text = "${rightData?.misrecognition_rate ?: 0}",
+                            fontSize = 13.sp,
                             color = Color.Black,
                             fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
                             modifier = Modifier.align(Alignment.Center)
@@ -292,26 +293,32 @@ fun MapCard(navController: NavController, trafficData: List<TrafficError>) {
                     }
                 }
 
-                // 주황 원
+                // slow 위치에 해당하는 원
                 Box(
                     modifier = Modifier
-                        .size(40.dp)
-                        .absoluteOffset(x = 80.dp, y = 125.dp)
+                        .size(45.dp)
+                        .absoluteOffset(x = 173.dp, y = 124.dp)
                         .clickable {
-                            selectedSignName = midData?.recognized_sign_name ?: "Unknown"
-                            selectedColor = Color(0xFFFFA500)
+                            selectedSignName = slowData?.recognized_sign_name ?: "Unknown"
+                            selectedColor = if (slowData == maxData) Color.Red
+                            else if (slowData == midData) Color(0xFFFFA500)
+                            else Color(0xFFE0C200)
                         }
                 ) {
                     DrawCircleWithBorder(
-                        fillColor = Color(0xFFFFA500),
-                        borderColor = Color(0xFFFFA500),
+                        fillColor = if (slowData == maxData) Color.Red
+                        else if (slowData == midData) Color(0xFFFFA500)
+                        else Color(0xFFE0C200),
+                        borderColor = if (slowData == maxData) Color.Red
+                        else if (slowData == midData) Color(0xFFFFA500)
+                        else Color(0xFFE0C200),
                         fillAlpha = 0.4f,
-                        radius = 20.dp,
+                        radius = 25.dp,
                         borderWidth = 2.dp
                     ) {
                         Text(
-                            text = "${midData?.misrecognition_rate ?: 0}",
-                            fontSize = 15.sp,
+                            text = "${slowData?.misrecognition_rate ?: 0}",
+                            fontSize = 13.sp,
                             color = Color.Black,
                             fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
                             modifier = Modifier.align(Alignment.Center)
@@ -319,26 +326,32 @@ fun MapCard(navController: NavController, trafficData: List<TrafficError>) {
                     }
                 }
 
-                // 노란 원
+                // notEnter 위치에 해당하는 원
                 Box(
                     modifier = Modifier
-                        .size(40.dp)
-                        .absoluteOffset(x = 300.dp, y = 120.dp)
+                        .size(45.dp)
+                        .absoluteOffset(x = 300.dp, y = 130.dp)
                         .clickable {
-                            selectedSignName = minData?.recognized_sign_name ?: "Unknown"
-                            selectedColor = Color(0xFFE0C200)
+                            selectedSignName = notEnterData?.recognized_sign_name ?: "Unknown"
+                            selectedColor = if (notEnterData == maxData) Color.Red
+                            else if (notEnterData == midData) Color(0xFFFFA500)
+                            else Color(0xFFE0C200)
                         }
                 ) {
                     DrawCircleWithBorder(
-                        fillColor = Color(0xFFE0C200),
-                        borderColor = Color(0xFFE0C200),
+                        fillColor = if (notEnterData == maxData) Color.Red
+                        else if (notEnterData == midData) Color(0xFFFFA500)
+                        else Color(0xFFE0C200),
+                        borderColor = if (notEnterData == maxData) Color.Red
+                        else if (notEnterData == midData) Color(0xFFFFA500)
+                        else Color(0xFFE0C200),
                         fillAlpha = 0.4f,
-                        radius = 20.dp,
+                        radius = 25.dp,
                         borderWidth = 2.dp
                     ) {
                         Text(
-                            text = "${minData?.misrecognition_rate ?: 0}",
-                            fontSize = 15.sp,
+                            text = "${notEnterData?.misrecognition_rate ?: 0}",
+                            fontSize = 13.sp,
                             color = Color.Black,
                             fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
                             modifier = Modifier.align(Alignment.Center)
@@ -348,25 +361,32 @@ fun MapCard(navController: NavController, trafficData: List<TrafficError>) {
 
                 // 선택된 원 위에 'bubble' 이미지와 텍스트 추가
                 if (selectedColor != Color.Black) {
-                    val bubbleOffset = when (selectedColor) {
-                        Color.Red -> Modifier.absoluteOffset(x = 114.dp, y = 2.dp)
-                        Color(0xFFFFA500) -> Modifier.absoluteOffset(x = 20.dp, y = 9.dp)
-                        Color(0xFFE0C200) -> Modifier.absoluteOffset(x = 241.dp, y = 7.dp)
-                        else -> Modifier
+                    val bubbleOffset = when (selectedSignName) {
+                        "right" -> Modifier.absoluteOffset(x = -7.dp, y = -110.dp)
+                        "slow" -> Modifier.absoluteOffset(x = 114.dp, y = 2.dp)
+                        "notEnter" -> Modifier.absoluteOffset(x = 242.dp, y = 7.dp)
+                        else -> Modifier.absoluteOffset(x = 241.dp, y = 7.dp)
+                    }
+
+                    val bubbleImage = when (selectedColor) {
+                        Color.Red -> R.drawable.redbubble
+                        Color(0xFFFFA500) -> R.drawable.orangebubble
+                        Color(0xFFE0C200) -> R.drawable.yellowbubble
+                        else -> R.drawable.purplebubble2 // 기본값
                     }
 
                     Box(
                         modifier = bubbleOffset.size(160.dp)
                     ) {
                         Image(
-                            painter = painterResource(id = R.drawable.bubble),
+                            painter = painterResource(id = bubbleImage),
                             contentDescription = "Bubble 이미지",
                             modifier = Modifier.fillMaxSize()
                         )
 
                         Text(
                             text = bubbleText,
-                            color = Color.Black,
+                            color = Color.White,
                             fontSize = 13.sp,
                             fontFamily = FontFamily(Font(R.font.pretendard_medium)),
                             lineHeight = 17.sp,
@@ -561,7 +581,7 @@ fun ListCard(selectedSignName: String, iconColor: Color, trafficData: List<Traff
 }
 
 
-        // 원의 색상에 따라 주소를 반환하는 함수
+// 원의 색상에 따라 주소를 반환하는 함수
 fun getAddressByColor(iconColor: Color): String {
     return when (iconColor) {
         Color.Red -> "서울특별시 노원구 동일로 207길 18"
