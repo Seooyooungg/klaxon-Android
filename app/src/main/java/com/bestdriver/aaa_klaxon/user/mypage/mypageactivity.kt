@@ -185,11 +185,6 @@ fun MyPageScreen(navController: NavController, modifier: Modifier = Modifier) {
                 Spacer(modifier = Modifier.height(15.dp))
 
                 MenuItem(
-                    text = "오분류 내역",
-                    onClick = { navController.navigate("reportHistory") }
-                )
-
-                MenuItem(
                     text = "캐시내역",
                     onClick = { navController.navigate("cash") }
                 )
@@ -277,12 +272,17 @@ fun MyPageScreen(navController: NavController, modifier: Modifier = Modifier) {
 // 로그아웃 요청을 처리하는 함수
 private fun logoutUser(context: Context, onLogoutSuccess: () -> Unit) {
     val mypageApiService = RetrofitClient.getMypageApiService(context)
+    val tokenManager = TokenManager(context)
+
     CoroutineScope(Dispatchers.IO).launch {
         try {
             val response = mypageApiService.logout()
             if (response.isSuccessful) {
-                TokenManager(context).clearToken() // 토큰 제거
-                onLogoutSuccess() // 로그아웃 성공 시 콜백 호출
+                // 모든 토큰 제거
+                tokenManager.clearTokens()
+
+                // 로그아웃 성공 시 콜백 호출
+                onLogoutSuccess()
             } else {
                 Log.e("MyPage", "Logout failed: ${response.code()}")
             }
@@ -291,6 +291,7 @@ private fun logoutUser(context: Context, onLogoutSuccess: () -> Unit) {
         }
     }
 }
+
 
 @Composable
 fun MenuItem(text: String, onClick: () -> Unit) {
