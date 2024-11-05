@@ -7,6 +7,5 @@ import retrofit2.http.Header
 interface MapApiService {
     @GET("errors/traffic")
     suspend fun getTrafficErrors(
-        @Header("Authorization") token: String
     ): TrafficResponse
 }
