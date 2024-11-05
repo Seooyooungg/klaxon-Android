@@ -37,36 +37,38 @@ import com.bestdriver.aaa_klaxon.network.auth.LoginViewModel
 import com.bestdriver.aaa_klaxon.ui.theme.AAA_klaxonTheme
 import com.bestdriver.aaa_klaxon.ui.theme.MyPurple
 import com.bestdriver.aaa_klaxon.R // 로고 파일이 포함된 리소스 패키지 추가
+import com.bestdriver.aaa_klaxon.home.MyScreen
 import com.bestdriver.aaa_klaxon.network.TokenManager
+import com.bestdriver.aaa_klaxon.user.mypage.OnboardingScreen
 
 class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             AAA_klaxonTheme {
-                // NavController 생성
                 val navController = rememberNavController()
 
-                // NavHost 설정
                 NavHost(navController = navController, startDestination = "login") {
                     composable("login") {
                         LoginScreen(
                             onLoginSuccess = {
-                                navController.navigate("main")
+                                navController.navigate("onboarding") // 온보딩 화면으로 이동
                             },
-                            navController = navController,
+                            navController = navController
                         )
                     }
                     composable("signup") {
-                        SignUpScreen(
-                            navController = navController
-                        )
+                        SignUpScreen(navController = navController)
+                    }
+                    composable("onboarding") { // 온보딩 화면 추가
+                        OnboardingScreen(navController = navController)
                     }
                 }
             }
         }
     }
 }
+
 
 @Composable
 fun LoginScreen(
@@ -160,9 +162,10 @@ fun LoginScreen(
             // 로그인 버튼
             Button(
                 onClick = {
-                    viewModel.onLoginClick { accessToken ->
+                    viewModel.onLoginClick {
+                        accessToken ->
                         // 액세스 토큰이 저장되었는지 확인
-                        val savedToken = TokenManager(context).getToken()
+                        val savedToken = TokenManager(context).getAccessToken()
                         if (savedToken != null) {
                             Log.d("LoginScreen", "Saved Token: $savedToken")
                         } else {
