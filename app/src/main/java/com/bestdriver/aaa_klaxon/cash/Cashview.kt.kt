@@ -100,12 +100,12 @@ fun CashDetails() {
                 Row(verticalAlignment = Alignment.Bottom,) {
                     Text(
                         text = "10,300",
-                        fontSize = 35.sp,
+                        fontSize = 30.sp,
                         fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
                     )
                     Text(
                         text = "원",
-                        fontSize = 20.sp,
+                        fontSize = 18.sp,
                         fontFamily = FontFamily(Font(R.font.pretendard_regular)),
                         modifier = Modifier
                             .padding(start = 4.dp)
@@ -122,7 +122,7 @@ fun CashDetails() {
                     onClick = { /* Handle 새로고침 클릭 */ },
                     modifier = Modifier
                         .width(85.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0XFFF2E3E2)),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFECD0CE)),
                     elevation = ButtonDefaults.elevatedButtonElevation(
                         defaultElevation = 5.dp,
                         pressedElevation = 0.dp,
@@ -135,7 +135,7 @@ fun CashDetails() {
                     Text(
                         text = "새로고침",
                         color = Color.Black,
-                        fontSize = 15.sp,
+                        fontSize = 14.sp,
                         fontFamily = FontFamily(Font(R.font.pretendard_medium)),
 
                         )
@@ -158,7 +158,7 @@ fun CashDetails() {
                     Text(
                         text = "사용하기",
                         color = Color.Black,
-                        fontSize = 15.sp,
+                        fontSize = 14.sp,
                         fontFamily = FontFamily(Font(R.font.pretendard_medium)),
                     )
                 }
@@ -198,12 +198,12 @@ fun CashHistory() {
         cashHistoryData.forEach { (date, transactions) ->
             Text(
                 text = date,
-                fontSize = 25.sp,
+                fontSize = 23.sp,
                 fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
-                modifier = Modifier.padding(vertical = 14.dp)
+                modifier = Modifier.padding(vertical = 12.dp)
             )
             HorizontalDivider(
-                modifier = Modifier.padding(vertical = 14.dp),
+                modifier = Modifier.padding(vertical = 12.dp),
                 thickness = 1.dp,
                 color = Color.LightGray
             )
@@ -214,7 +214,7 @@ fun CashHistory() {
                     Row(
                         Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 14.dp),
+                            .padding(vertical = 12.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -241,7 +241,7 @@ fun CashHistory() {
                         )
                     }
                     HorizontalDivider(
-                        modifier = Modifier.padding(vertical = 16.dp),
+                        modifier = Modifier.padding(vertical = 12.dp),
                         thickness = 0.3.dp,
                         color = Color.LightGray
                     )

@@ -94,7 +94,7 @@ fun CommunityScreen(
             item {
                 Text(
                     text = "커뮤니티",
-                    fontSize = 32.sp,
+                    fontSize = 28.sp,
                     fontFamily = FontFamily(Font(R.font.pretendard_extrabold)),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -106,7 +106,7 @@ fun CommunityScreen(
             item {
                 Text(
                     text = "인기 글",
-                    fontSize = 23.sp,
+                    fontSize = 20.sp,
                     fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
                     modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
                 )
@@ -132,7 +132,7 @@ fun CommunityScreen(
                 item {
                     Text(
                         text = "인기 글이 없습니다.",
-                        fontSize = 18.sp,
+                        fontSize = 16.sp,
                         fontFamily = FontFamily(Font(R.font.pretendard_medium)),
                         color = Color.Black,
                         modifier = Modifier.fillMaxWidth()
@@ -146,7 +146,7 @@ fun CommunityScreen(
                 item {
                     Text(
                         text = "게시글이 없습니다.",
-                        fontSize = 18.sp,
+                        fontSize = 16.sp,
                         fontFamily = FontFamily(Font(R.font.pretendard_medium)),
                         color = Color.Black,
                         modifier = Modifier.fillMaxWidth()
@@ -209,7 +209,7 @@ fun CommunityPost(
     Column(modifier = Modifier.padding(bottom = 10.dp)) {
         Text(
             text = title,
-            fontSize = 22.sp,
+            fontSize = 20.sp,
             fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
             modifier = Modifier
                 .fillMaxWidth()
@@ -243,7 +243,7 @@ fun CommunityPost(
 
             Text(
                 text = favoriteCount.toString(),
-                fontSize = 13.sp,
+                fontSize = 12.sp,
                 fontFamily = FontFamily(Font(R.font.pretendard_medium)),
                 color = Color.Black,
                 modifier = Modifier.padding(end = 5.dp)
@@ -260,17 +260,17 @@ fun CommunityPost(
 
             Text(
                 text = commentCount.toString(),
-                fontSize = 13.sp,
+                fontSize = 12.sp,
                 fontFamily = FontFamily(Font(R.font.pretendard_regular)),
                 color = Color.Black,
                 modifier = Modifier.padding(end = 10.dp)
             )
 
-            SmallVerticalLine()
+            SmallVerticalLine(modifier = Modifier.padding(vertical = 6.dp)) // 선을 중앙에 위치하도록 패딩 설정)
 
             Text(
                 text = date,
-                fontSize = 13.sp,
+                fontSize = 12.sp,
                 fontFamily = FontFamily(Font(R.font.pretendard_regular)),
                 color = Color.Black.copy(alpha = 0.5f),
                 modifier = Modifier.padding(start = 10.dp)
@@ -307,7 +307,7 @@ fun PopularCard(
             ) {
                 Text(
                     text = title,
-                    fontSize = 23.sp,
+                    fontSize = 20.sp,
                     fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
                     color = Color.Black,
                     modifier = Modifier
@@ -345,7 +345,7 @@ fun PopularCard(
 
                     Text(
                         text = favoriteCount.toString(),
-                        fontSize = 15.sp,
+                        fontSize = 14.sp,
                         fontFamily = FontFamily(Font(R.font.pretendard_medium)),
                         color = Color.Black
                     )
@@ -367,7 +367,7 @@ fun PopularCard(
 
                     Text(
                         text = commentCount.toString(),
-                        fontSize = 15.sp,
+                        fontSize = 14.sp,
                         fontFamily = FontFamily(Font(R.font.pretendard_medium)),
                         color = Color.Black
                     )
@@ -390,13 +390,12 @@ fun ThinHorizontalLine() {
 }
 
 @Composable
-fun SmallVerticalLine() {
+fun SmallVerticalLine(modifier: Modifier = Modifier) {
     Box(
-        modifier = Modifier
-            .height(13.dp) // 선의 높이를 설정 (작게 설정)
-            .width(1.dp) // 선의 두께를 설정 (얇게 설정)
-            .background(Color.Black.copy(alpha = 0.3f)) // 선의 색상 및 투명도 설정
-            .padding(top = 10.dp)
+        modifier = modifier
+            .height(13.dp)
+            .width(1.dp)
+            .background(Color.Black.copy(alpha = 0.3f))
     )
 }
 

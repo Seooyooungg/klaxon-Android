@@ -126,7 +126,7 @@ fun TitleCard(navController: NavController) {
             Box(
                 modifier = Modifier
                     .wrapContentHeight()
-                    .height(37.dp)
+                    .height(36.dp)
                     .size(130.dp)
                     .background(
                         color = MyPurple.copy(alpha = 0.3f), // 배경색 설정
@@ -140,7 +140,7 @@ fun TitleCard(navController: NavController) {
                 Text(
                     text = "적립내역 보기",
                     style = TextStyle(
-                        fontSize = 18.sp,
+                        fontSize = 16.sp,
                         fontFamily = FontFamily(Font(R.font.pretendard_medium)),
                         color = Color.Black
                     ),
@@ -148,10 +148,10 @@ fun TitleCard(navController: NavController) {
                 )
             }
         }
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         ThinHorizontalLine()
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(2.dp))
     }
 }
 
@@ -211,7 +211,7 @@ fun MapCard(navController: NavController, trafficData: List<TrafficError>) {
             Text(
                 text = "실시간 정보",
                 style = TextStyle(
-                    fontSize = 25.sp,
+                    fontSize = 23.sp,
                     fontFamily = FontFamily(Font(R.font.pretendard_semibold))
                 )
             )

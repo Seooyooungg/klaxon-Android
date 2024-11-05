@@ -363,7 +363,7 @@ fun CommentSection(viewModel: CommunityWriteScreenViewModel, postId: Int) {
         Box(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .size(70.dp, 60.dp)
+                .size(70.dp, 62.dp)
                 .padding(bottom = 4.dp)
                 .background(MyPurple)
                 .clickable {

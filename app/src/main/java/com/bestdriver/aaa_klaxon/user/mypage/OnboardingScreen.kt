@@ -48,7 +48,7 @@ fun OnboardingScreen(navController: NavController) {
             painter = painterResource(id = images[currentIndex]),
             contentDescription = "Onboarding Image",
             modifier = Modifier
-                .fillMaxSize(0.9f), // 이미지 크기를 줄이기 위한 비율 조정
+                .fillMaxSize(0.85f), // 이미지 크기를 줄이기 위한 비율 조정
             contentScale = ContentScale.Fit // 이미지가 잘리지 않고 화면에 맞게 조정
         )
 
