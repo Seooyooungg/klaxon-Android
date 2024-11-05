@@ -83,6 +83,11 @@ typealias CommentsResponse = ApiResponse<List<CommentResult>>
 data class LikeResponse(
     val isSuccess: Boolean,
     val code: Int,
-    val message: String
+    val message: String,
+    val result: LikeResult? // 결과 필드 추가
+)
+
+data class LikeResult(
+    val like_count: Int
 )
 
