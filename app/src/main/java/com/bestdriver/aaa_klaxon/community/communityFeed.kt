@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -50,8 +51,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -84,24 +87,21 @@ fun CommunityFeedScreen(
     viewModel: CommunityWriteScreenViewModel,
     postId: Int // 게시글 ID
 ) {
-    // 네비게이션을 위한 상태 변수
     var isNavigatingBack by remember { mutableStateOf(false) }
+    val keyboardController = LocalSoftwareKeyboardController.current
 
-    // 최신 데이터를 불러오기 위해 postId가 변경될 때마다 fetch 호출
     LaunchedEffect(postId) {
-//        viewModel.clearSelectedPost() // 선택된 게시글 상태 초기화
         viewModel.fetchPostById(postId)
         viewModel.fetchCommentsForPost(postId)
     }
 
-    // 뒤로 가기 트리거가 설정되면 데이터 다시 불러오기 후 네비게이션
     LaunchedEffect(isNavigatingBack) {
         if (isNavigatingBack) {
             viewModel.fetchPostById(postId)
             navController.navigate("communityHome") {
                 popUpTo("communityHome") { inclusive = true }
             }
-            isNavigatingBack = false // 초기화
+            isNavigatingBack = false
         }
     }
 
@@ -112,12 +112,16 @@ fun CommunityFeedScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = {
+                    keyboardController?.hide() // 외부 터치 시 키보드 숨기기
+                })
+            }
     ) {
         LazyColumn(
             modifier = Modifier
-                .weight(1f) // 스크롤 가능한 부분이 전체 공간을 차지하도록
+                .weight(1f)
         ) {
-            // 뒤로 가기 아이콘
             item {
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
@@ -125,9 +129,7 @@ fun CommunityFeedScreen(
                     modifier = Modifier
                         .size(35.dp)
                         .padding(top = 10.dp)
-                        .clickable {
-                            isNavigatingBack = true // 뒤로 가기 상태를 true로 설정
-                        },
+                        .clickable { isNavigatingBack = true },
                     tint = Color.Black
                 )
             }
@@ -136,20 +138,15 @@ fun CommunityFeedScreen(
                 Spacer(modifier = Modifier.height(10.dp))
             }
 
-            // 게시글 내용
             post?.let { validPost ->
                 item {
-                    PostItem(
-                        post = validPost,
-                        viewModel = viewModel
-                    )
+                    PostItem(post = validPost, viewModel = viewModel)
                 }
 
                 item {
                     Spacer(modifier = Modifier.height(16.dp))
                 }
 
-                // 댓글 목록을 표시하는 아이템
                 comments[validPost.post_id]?.forEach { comment ->
                     item {
                         CommentItem(comment)
@@ -162,17 +159,15 @@ fun CommunityFeedScreen(
             }
         }
 
-        // 댓글 입력란을 LazyColumn의 아래에 고정
-        CommentSection(viewModel, post?.post_id ?: -1) // token 파라미터 제거
+        CommentSection(viewModel = viewModel, postId = post?.post_id ?: -1)
     }
 }
 
 @Composable
 fun PostItem(post: Post, viewModel: CommunityWriteScreenViewModel) {
-    val isLiked = rememberSaveable { mutableStateOf(false) }
+    val isLiked = viewModel.isPostLiked(post.post_id)
     val likeCount = rememberSaveable { mutableStateOf(post.like_count) }
     val coroutineScope = rememberCoroutineScope()
-
 
     Row(
         modifier = Modifier
@@ -217,18 +212,18 @@ fun PostItem(post: Post, viewModel: CommunityWriteScreenViewModel) {
         )
 
         Icon(
-            imageVector = if (isLiked.value) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+            imageVector = if (isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
             contentDescription = "Favorite",
             modifier = Modifier
                 .size(30.dp)
                 .clickable {
                     coroutineScope.launch {
-                        isLiked.value = !isLiked.value
-                        likeCount.value = if (isLiked.value) likeCount.value + 1 else likeCount.value - 1
-                        if (isLiked.value) {
-                            viewModel.addLike(post.post_id)
-                        } else {
+                        if (isLiked) {
                             viewModel.removeLike(post.post_id)
+                            likeCount.value -= 1
+                        } else {
+                            viewModel.addLike(post.post_id)
+                            likeCount.value += 1
                         }
                     }
                 },

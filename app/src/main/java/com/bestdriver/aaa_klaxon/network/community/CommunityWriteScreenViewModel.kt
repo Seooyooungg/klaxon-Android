@@ -25,20 +25,23 @@ class CommunityWriteScreenViewModel(application: Application) : AndroidViewModel
     private val _selectedPost = MutableStateFlow<Post?>(null)
     val selectedPost: StateFlow<Post?> get() = _selectedPost
 
+    // 좋아요 상태와 개수 관리
+    private val _likeStates = MutableStateFlow<Map<Int, Boolean>>(emptyMap())
+    val likeStates: StateFlow<Map<Int, Boolean>> get() = _likeStates
+
     private val apiService: CommunityApiService = RetrofitClient.getCommunityApiService(application)
 
     init {
         fetchPosts()
     }
 
+    // 게시글 목록을 가져오고, 좋아요 상태도 초기화
     fun fetchPosts() {
         viewModelScope.launch {
             try {
                 val response = apiService.getPosts()
                 if (response.isSuccessful && response.body()?.isSuccess == true) {
                     val postsResult = response.body()?.result
-                    Log.d("CommunityViewModel", "Fetched posts: $postsResult")
-
                     postsResult?.let { postResults ->
                         _posts.value = postResults.map { postResult ->
                             Post(
@@ -52,9 +55,9 @@ class CommunityWriteScreenViewModel(application: Application) : AndroidViewModel
                                 comment_count = postResult.comment_count
                             )
                         }
-                    } ?: run {
-                        Log.d("CommunityViewModel", "No posts found")
-                        _posts.value = emptyList()
+                        // 게시물 ID와 좋아요 상태를 매핑하여 초기화
+                        val initialLikeStates = postResults.associate { it.post_id to (it.like_count > 0) }
+                        _likeStates.value = initialLikeStates
                     }
                 } else {
                     Log.e("CommunityViewModel", "게시글 조회 오류: ${response.code()} - ${response.message()}")
@@ -80,6 +83,10 @@ class CommunityWriteScreenViewModel(application: Application) : AndroidViewModel
                         like_count = result.like_count,
                         comment_count = result.comment_count
                     )
+                    // 좋아요 상태를 게시물의 현재 상태로 업데이트
+                    _likeStates.update { currentStates ->
+                        currentStates + (postId to (result.like_count > 0))
+                    }
                 }
             } else {
                 Log.e("CommunityViewModel", "Error fetching post: ${response.code()} - ${response.message()}")
@@ -131,6 +138,7 @@ class CommunityWriteScreenViewModel(application: Application) : AndroidViewModel
             val response = apiService.addComment(postId, request)
             if (response.isSuccessful && response.body()?.isSuccess == true) {
                 val result = response.body()?.result
+                Log.d("CommunityViewModel", "API Response Nickname: ${result?.nickname}") // nickname 로그 확인
                 result?.let {
                     val newComment = Comment(
                         commentId = it.comment_id,
@@ -157,6 +165,7 @@ class CommunityWriteScreenViewModel(application: Application) : AndroidViewModel
         }
     }
 
+
     suspend fun fetchCommentsForPost(postId: Int) {
         try {
             val response = apiService.getCommentsByPostId(postId)
@@ -167,7 +176,7 @@ class CommunityWriteScreenViewModel(application: Application) : AndroidViewModel
                         commentId = commentResult.comment_id,
                         postId = commentResult.post_id,
                         userId = commentResult.user_id,
-                        nickname = "User ${commentResult.user_id}",
+                        nickname = commentResult.nickname,
                         body = commentResult.text,
                         createdAt = commentResult.createdAt
                     )
@@ -188,11 +197,13 @@ class CommunityWriteScreenViewModel(application: Application) : AndroidViewModel
 
     fun getMostLikedPost(): Post? = _posts.value.maxByOrNull { it.like_count }
 
+
+    // 좋아요 추가 메서드
     suspend fun addLike(postId: Int): Boolean {
         return try {
             val response = apiService.addLike(postId)
             if (response.isSuccessful && response.body()?.isSuccess == true) {
-                fetchPostById(postId)
+                updateLikeState(postId, true)
                 true
             } else {
                 Log.e("CommunityViewModel", "Error adding like: ${response.code()} - ${response.message()}")
@@ -204,11 +215,12 @@ class CommunityWriteScreenViewModel(application: Application) : AndroidViewModel
         }
     }
 
+    // 좋아요 제거 메서드
     suspend fun removeLike(postId: Int): Boolean {
         return try {
             val response = apiService.removeLike(postId)
             if (response.isSuccessful && response.body()?.isSuccess == true) {
-                fetchPostById(postId)
+                updateLikeState(postId, false)
                 true
             } else {
                 Log.e("CommunityViewModel", "Error removing like: ${response.code()} - ${response.message()}")
@@ -219,8 +231,15 @@ class CommunityWriteScreenViewModel(application: Application) : AndroidViewModel
             false
         }
     }
+
+    // 좋아요 상태 업데이트 메서드
+    private fun updateLikeState(postId: Int, isLiked: Boolean) {
+        _likeStates.update { currentStates ->
+            currentStates + (postId to isLiked)
+        }
+    }
+
+    fun isPostLiked(postId: Int): Boolean {
+        return _likeStates.value[postId] ?: false
+    }
 }
-
-
-
-
