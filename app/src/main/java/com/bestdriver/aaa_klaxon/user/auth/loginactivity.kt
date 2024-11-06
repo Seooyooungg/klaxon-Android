@@ -52,16 +52,13 @@ class LoginActivity : ComponentActivity() {
                     composable("login") {
                         LoginScreen(
                             onLoginSuccess = {
-                                navController.navigate("onboarding") // 온보딩 화면으로 이동
+                                navController.navigate("main")
                             },
                             navController = navController
                         )
                     }
                     composable("signup") {
                         SignUpScreen(navController = navController)
-                    }
-                    composable("onboarding") { // 온보딩 화면 추가
-                        OnboardingScreen(navController = navController)
                     }
                 }
             }

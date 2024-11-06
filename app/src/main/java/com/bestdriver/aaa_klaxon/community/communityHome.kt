@@ -299,83 +299,95 @@ fun PopularCard(
                 .background(MyPurple.copy(alpha = 0.2f))
                 .padding(horizontal = 16.dp)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxHeight() // Box의 전체 높이를 사용
-                    .padding(vertical = 13.dp),
-                verticalArrangement = Arrangement.Center // 세로 가운데 정렬
-            ) {
-                Text(
-                    text = title,
-                    fontSize = 20.sp,
-                    fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
-                    color = Color.Black,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 12.dp)
-                )
-
-                Text(
-                    text = content,
-                    fontSize = 18.sp,
-                    fontFamily = FontFamily(Font(R.font.pretendard_medium)),
-                    color = Color.Black,
-                    maxLines = 1, // 한 줄만 표시
-                    overflow = TextOverflow.Ellipsis, // 넘칠 경우 생략 부호(...) 추가
-                    modifier = Modifier.fillMaxWidth()
-
-                )
-            }
             Row(
-                modifier = Modifier
-                    .align(Alignment.CenterEnd)
+                modifier = Modifier.fillMaxSize(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .padding(vertical = 13.dp)
+                        .weight(1f), // 남은 공간을 채우도록 함
+                    verticalArrangement = Arrangement.SpaceAround
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Favorite,
-                        contentDescription = "Favorite",
+                    Text(
+                        text = title,
+                        fontSize = 20.sp,
+                        fontFamily = FontFamily(Font(R.font.pretendard_semibold)),
+                        color = Color.Black,
                         modifier = Modifier
-                            .size(25.dp)
-                            .padding(bottom = 4.dp),
-                        tint = MyPurple
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp)
                     )
 
                     Text(
-                        text = favoriteCount.toString(),
-                        fontSize = 14.sp,
+                        text = content,
+                        fontSize = 18.sp,
                         fontFamily = FontFamily(Font(R.font.pretendard_medium)),
-                        color = Color.Black
+                        color = Color.Black,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
 
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                    modifier = Modifier.padding(start = 10.dp)
+                Spacer(modifier = Modifier.width(10.dp))
+
+                // 좋아요 및 댓글 아이콘과 텍스트를 오른쪽에 배치
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp) // 아이콘 간격 설정
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = "Chat",
-                        modifier = Modifier
-                            .size(25.dp)
-                            .padding(bottom = 4.dp),
-                        tint = MyPurple
-                    )
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Favorite,
+                            contentDescription = "Favorite",
+                            modifier = Modifier
+                                .size(20.dp)
+                                .padding(bottom = 2.dp),
+                            tint = MyPurple
+                        )
 
-                    Text(
-                        text = commentCount.toString(),
-                        fontSize = 14.sp,
-                        fontFamily = FontFamily(Font(R.font.pretendard_medium)),
-                        color = Color.Black
-                    )
+                        Text(
+                            text = favoriteCount.toString(),
+                            fontSize = 14.sp,
+                            fontFamily = FontFamily(Font(R.font.pretendard_medium)),
+                            color = Color.Black
+                        )
+                    }
+
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Chat",
+                            modifier = Modifier
+                                .size(20.dp)
+                                .padding(bottom = 2.dp),
+                            tint = MyPurple
+                        )
+
+                        Text(
+                            text = commentCount.toString(),
+                            fontSize = 14.sp,
+                            fontFamily = FontFamily(Font(R.font.pretendard_medium)),
+                            color = Color.Black
+                        )
+                    }
                 }
+
             }
         }
     }
 }
+
+
 
 
 

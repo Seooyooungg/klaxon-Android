@@ -149,12 +149,12 @@ fun AppNavGraph(
 ) {
     NavHost(
         navController = navController,
-        startDestination = "login",
+        startDestination = "onboarding",
         Modifier.then(modifier)
     ) {
         composable("login") {
             LoginScreen(onLoginSuccess = {
-                navController.navigate("onboarding")
+                navController.navigate("main")
             }, navController = navController)
         }
         composable("main") {
@@ -248,6 +248,10 @@ fun AppNavGraph(
 
         composable("reportHistory") {
             ReportHistoryScreen(onBackPressed = { navController.popBackStack() })
+        }
+
+        composable("onboarding") {
+            OnboardingScreen(navController)
         }
     }
 }

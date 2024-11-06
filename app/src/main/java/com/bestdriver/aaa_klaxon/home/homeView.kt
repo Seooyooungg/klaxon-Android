@@ -174,7 +174,6 @@ fun MapCard(navController: NavController, trafficData: List<TrafficError>) {
     val notEnterData = trafficData.find { it.recognized_sign_name == "notEnter" }
     val rightData = trafficData.find { it.recognized_sign_name == "right" }
     val slowData = trafficData.find { it.recognized_sign_name == "slow" }
-    val notLeftData = trafficData.find { it.recognized_sign_name == "notLeft" }
 
     // misrecognition_rate 순으로 정렬하여 색상 지정
     val sortedTrafficData = listOfNotNull(notEnterData, rightData, slowData).sortedBy { it.misrecognition_rate }
@@ -557,7 +556,6 @@ fun ListCard(selectedSignName: String, iconColor: Color, trafficData: List<Traff
                                 when (trafficError.recognized_sign_name ?: "Unknown") {
                                     "right" -> R.drawable.right
                                     "notEnter" -> R.drawable.notenter
-                                    "notLeft" -> R.drawable.notleft
                                     "slow" -> R.drawable.slow
                                     else -> R.drawable.right // 기본 이미지
                                 }
