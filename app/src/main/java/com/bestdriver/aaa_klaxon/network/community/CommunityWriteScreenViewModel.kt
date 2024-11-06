@@ -31,6 +31,10 @@ class CommunityWriteScreenViewModel(application: Application) : AndroidViewModel
 
     private val apiService: CommunityApiService = RetrofitClient.getCommunityApiService(application)
 
+    private val _likeCounts = MutableStateFlow<Map<Int, Int>>(emptyMap())
+    val likeCounts: StateFlow<Map<Int, Int>> get() = _likeCounts
+
+
     init {
         fetchPosts()
     }
@@ -83,10 +87,9 @@ class CommunityWriteScreenViewModel(application: Application) : AndroidViewModel
                         like_count = result.like_count,
                         comment_count = result.comment_count
                     )
-                    // 좋아요 상태를 게시물의 현재 상태로 업데이트
-                    _likeStates.update { currentStates ->
-                        currentStates + (postId to (result.like_count > 0))
-                    }
+                    // 좋아요 상태와 좋아요 개수 업데이트
+                    _likeStates.update { currentStates -> currentStates + (postId to (result.like_count > 0)) }
+                    _likeCounts.update { currentCounts -> currentCounts + (postId to result.like_count) }
                 }
             } else {
                 Log.e("CommunityViewModel", "Error fetching post: ${response.code()} - ${response.message()}")
@@ -203,7 +206,7 @@ class CommunityWriteScreenViewModel(application: Application) : AndroidViewModel
         return try {
             val response = apiService.addLike(postId)
             if (response.isSuccessful && response.body()?.isSuccess == true) {
-                updateLikeState(postId, true)
+                updateLikeState(postId, true)  // 현재 계정의 좋아요 상태 설정
                 true
             } else {
                 Log.e("CommunityViewModel", "Error adding like: ${response.code()} - ${response.message()}")
@@ -220,7 +223,7 @@ class CommunityWriteScreenViewModel(application: Application) : AndroidViewModel
         return try {
             val response = apiService.removeLike(postId)
             if (response.isSuccessful && response.body()?.isSuccess == true) {
-                updateLikeState(postId, false)
+                updateLikeState(postId, false)  // 현재 계정의 좋아요 상태 해제
                 true
             } else {
                 Log.e("CommunityViewModel", "Error removing like: ${response.code()} - ${response.message()}")
@@ -238,6 +241,7 @@ class CommunityWriteScreenViewModel(application: Application) : AndroidViewModel
             currentStates + (postId to isLiked)
         }
     }
+
 
     fun isPostLiked(postId: Int): Boolean {
         return _likeStates.value[postId] ?: false

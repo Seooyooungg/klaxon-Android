@@ -165,8 +165,9 @@ fun CommunityFeedScreen(
 
 @Composable
 fun PostItem(post: Post, viewModel: CommunityWriteScreenViewModel) {
+    // 각 게시글에 대해 현재 계정이 좋아요를 눌렀는지 확인
     val isLiked = viewModel.isPostLiked(post.post_id)
-    val likeCount = rememberSaveable { mutableStateOf(post.like_count) }
+    val likeCount = viewModel.likeCounts.collectAsState(initial = mapOf()).value[post.post_id] ?: post.like_count
     val coroutineScope = rememberCoroutineScope()
 
     Row(
@@ -220,10 +221,8 @@ fun PostItem(post: Post, viewModel: CommunityWriteScreenViewModel) {
                     coroutineScope.launch {
                         if (isLiked) {
                             viewModel.removeLike(post.post_id)
-                            likeCount.value -= 1
                         } else {
                             viewModel.addLike(post.post_id)
-                            likeCount.value += 1
                         }
                     }
                 },
@@ -254,7 +253,7 @@ fun PostItem(post: Post, viewModel: CommunityWriteScreenViewModel) {
         )
 
         Text(
-            text = likeCount.value.toString(),
+            text = likeCount.toString(),
             fontSize = 18.sp,
             fontFamily = FontFamily(Font(R.font.pretendard_regular)),
             color = Color.Black,
@@ -281,6 +280,7 @@ fun PostItem(post: Post, viewModel: CommunityWriteScreenViewModel) {
         )
     }
 }
+
 
 
 @Composable
