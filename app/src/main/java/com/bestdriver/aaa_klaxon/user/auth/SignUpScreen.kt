@@ -108,11 +108,11 @@ fun SignUpScreen(
                     value = password,
                     onValueChange = {
                         viewModel.updatePassword(it)
-                        passwordErrorMessage = if (!isPasswordValid(it)) {
-                            "비밀번호가 유효하지 않습니다. 규칙을 확인해주세요."
-                        } else {
-                            null
-                        }
+//                        passwordErrorMessage = if (!isPasswordValid(it)) {
+//                            "비밀번호가 유효하지 않습니다. 규칙을 확인해주세요."
+//                        } else {
+//                            null
+//                        }
                     },
                     singleLine = true,
                     placeholder = { Text("비밀번호를 입력해주세요", fontSize = 15.sp) },
@@ -121,20 +121,20 @@ fun SignUpScreen(
                         .padding(vertical = 4.dp),
                     visualTransformation = PasswordVisualTransformation()
                 )
-                passwordErrorMessage?.let { errorMessage ->
-                    Text(
-                        text = errorMessage,
-                        color = Color.Red,
-                        fontSize = 12.sp,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
-                }
-                Text(
-                    text = "(영대문자, 영소문자, 숫자 및 특수문자 중 3종류 이상으로 구성, 최소 9자 이상)",
-                    color = Color.Gray,
-                    fontSize = 12.sp,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
+//                passwordErrorMessage?.let { errorMessage ->
+//                    Text(
+//                        text = errorMessage,
+//                        color = Color.Red,
+//                        fontSize = 12.sp,
+//                        modifier = Modifier.padding(top = 8.dp)
+//                    )
+//                }
+//                Text(
+//                    text = "(영대문자, 영소문자, 숫자 및 특수문자 중 3종류 이상으로 구성, 최소 9자 이상)",
+//                    color = Color.Gray,
+//                    fontSize = 12.sp,
+//                    modifier = Modifier.padding(top = 4.dp)
+//                )
             }
 
             item {
@@ -227,26 +227,26 @@ fun isEmailValid(email: String): Boolean {
     return emailPattern.matches(email)
 }
 
-// Password validation function
-fun isPasswordValid(password: String): Boolean {
-    val minLength = 9
-    val hasUpperCase = password.any { it.isUpperCase() }
-    val hasLowerCase = password.any { it.isLowerCase() }
-    val hasDigit = password.any { it.isDigit() }
-    val hasSpecialChar = password.any { "!@#\$%^&*()_-+=[]{}|\\;:'\"<>,.?/~".contains(it) }
-
-    val validComposition = listOf(hasUpperCase, hasLowerCase, hasDigit, hasSpecialChar).count { it } >= 3
-    if (password.length < minLength || !validComposition) {
-        return false
-    }
-
-    val easyPatterns = listOf("12345678", "abcdef", "qwerty", "password", "love", "happy")
-    if (easyPatterns.any { password.contains(it, ignoreCase = true) }) {
-        return false
-    }
-
-    return true
-}
+//// Password validation function
+//fun isPasswordValid(password: String): Boolean {
+//    val minLength = 9
+//    val hasUpperCase = password.any { it.isUpperCase() }
+//    val hasLowerCase = password.any { it.isLowerCase() }
+//    val hasDigit = password.any { it.isDigit() }
+//    val hasSpecialChar = password.any { "!@#\$%^&*()_-+=[]{}|\\;:'\"<>,.?/~".contains(it) }
+//
+//    val validComposition = listOf(hasUpperCase, hasLowerCase, hasDigit, hasSpecialChar).count { it } >= 3
+//    if (password.length < minLength || !validComposition) {
+//        return false
+//    }
+//
+//    val easyPatterns = listOf("12345678", "abcdef", "qwerty", "password", "love", "happy")
+//    if (easyPatterns.any { password.contains(it, ignoreCase = true) }) {
+//        return false
+//    }
+//
+//    return true
+//}
 
 
 
