@@ -17,7 +17,8 @@ data class Post(
     val main_text: String,
     val createdAt: String,
     val like_count: Int,
-    val comment_count: Int
+    val comment_count: Int,
+    val isLiked: Boolean // 추가된 필드
 )
 
 data class PostRequest(
@@ -54,7 +55,8 @@ data class PostResult(
     val main_text: String,
     val createdAt: String,
     val like_count: Int, // 추가
-    val comment_count: Int // 추가
+    val comment_count: Int, // 추가
+    val isLiked: Boolean // 추가된 필드
 )
 
 // 요청 본체 데이터 클래스

@@ -39,7 +39,6 @@ class CommunityWriteScreenViewModel(application: Application) : AndroidViewModel
         fetchPosts()
     }
 
-    // 게시글 목록을 가져오고, 좋아요 상태도 초기화
     fun fetchPosts() {
         viewModelScope.launch {
             try {
@@ -52,16 +51,14 @@ class CommunityWriteScreenViewModel(application: Application) : AndroidViewModel
                                 post_id = postResult.post_id,
                                 user_id = postResult.user_id,
                                 nickname = postResult.nickname,
-                                title = postResult.title ?: "",
-                                main_text = postResult.main_text ?: "",
+                                title = postResult.title,
+                                main_text = postResult.main_text,
                                 createdAt = postResult.createdAt,
                                 like_count = postResult.like_count,
-                                comment_count = postResult.comment_count
+                                comment_count = postResult.comment_count,
+                                isLiked = postResult.isLiked // 추가된 필드 매핑
                             )
                         }
-                        // 게시물 ID와 좋아요 상태를 매핑하여 초기화
-                        val initialLikeStates = postResults.associate { it.post_id to (it.like_count > 0) }
-                        _likeStates.value = initialLikeStates
                     }
                 } else {
                     Log.e("CommunityViewModel", "게시글 조회 오류: ${response.code()} - ${response.message()}")
@@ -85,11 +82,9 @@ class CommunityWriteScreenViewModel(application: Application) : AndroidViewModel
                         main_text = result.main_text,
                         createdAt = result.createdAt,
                         like_count = result.like_count,
-                        comment_count = result.comment_count
+                        comment_count = result.comment_count,
+                        isLiked = result.isLiked // 추가된 필드 매핑
                     )
-                    // 좋아요 상태와 좋아요 개수 업데이트
-                    _likeStates.update { currentStates -> currentStates + (postId to (result.like_count > 0)) }
-                    _likeCounts.update { currentCounts -> currentCounts + (postId to result.like_count) }
                 }
             } else {
                 Log.e("CommunityViewModel", "Error fetching post: ${response.code()} - ${response.message()}")
@@ -98,6 +93,7 @@ class CommunityWriteScreenViewModel(application: Application) : AndroidViewModel
             Log.e("CommunityViewModel", "Exception fetching post: ${e.localizedMessage}")
         }
     }
+
 
     suspend fun addPost(title: String, body: String, nickname: String): Int? {
         if (title.isBlank() || body.isBlank()) {
@@ -121,7 +117,8 @@ class CommunityWriteScreenViewModel(application: Application) : AndroidViewModel
                             main_text = it.main_text,
                             createdAt = it.createdAt,
                             like_count = 0,
-                            comment_count = 0
+                            comment_count = 0,
+                            isLiked = false // 새 게시글은 기본적으로 좋아요가 없는 상태로 초기화
                         )
                     }
                     it.post_id
@@ -135,6 +132,7 @@ class CommunityWriteScreenViewModel(application: Application) : AndroidViewModel
             null
         }
     }
+
 
     suspend fun addComment(postId: Int, request: CommentRequest): Boolean {
         return try {
@@ -201,12 +199,12 @@ class CommunityWriteScreenViewModel(application: Application) : AndroidViewModel
     fun getMostLikedPost(): Post? = _posts.value.maxByOrNull { it.like_count }
 
 
-    // 좋아요 추가 메서드
     suspend fun addLike(postId: Int): Boolean {
         return try {
             val response = apiService.addLike(postId)
             if (response.isSuccessful && response.body()?.isSuccess == true) {
-                updateLikeState(postId, true)  // 현재 계정의 좋아요 상태 설정
+                updateLikeState(postId, true)
+                updatePostLikeStatus(postId, isLiked = true, increment = true)
                 true
             } else {
                 Log.e("CommunityViewModel", "Error adding like: ${response.code()} - ${response.message()}")
@@ -218,12 +216,12 @@ class CommunityWriteScreenViewModel(application: Application) : AndroidViewModel
         }
     }
 
-    // 좋아요 제거 메서드
     suspend fun removeLike(postId: Int): Boolean {
         return try {
             val response = apiService.removeLike(postId)
             if (response.isSuccessful && response.body()?.isSuccess == true) {
-                updateLikeState(postId, false)  // 현재 계정의 좋아요 상태 해제
+                updateLikeState(postId, false)
+                updatePostLikeStatus(postId, isLiked = false, increment = false)
                 true
             } else {
                 Log.e("CommunityViewModel", "Error removing like: ${response.code()} - ${response.message()}")
@@ -235,12 +233,34 @@ class CommunityWriteScreenViewModel(application: Application) : AndroidViewModel
         }
     }
 
+
+
     // 좋아요 상태 업데이트 메서드
     private fun updateLikeState(postId: Int, isLiked: Boolean) {
         _likeStates.update { currentStates ->
             currentStates + (postId to isLiked)
         }
     }
+
+    private fun updatePostLikeStatus(postId: Int, isLiked: Boolean, increment: Boolean) {
+        _selectedPost.update { post ->
+            post?.takeIf { it.post_id == postId }?.copy(
+                isLiked = isLiked,
+                like_count = if (increment) post.like_count + 1 else post.like_count - 1
+            )
+        }
+        _posts.update { currentPosts ->
+            currentPosts.map { post ->
+                if (post.post_id == postId) {
+                    post.copy(
+                        isLiked = isLiked,
+                        like_count = if (increment) post.like_count + 1 else post.like_count - 1
+                    )
+                } else post
+            }
+        }
+    }
+
 
 
     fun isPostLiked(postId: Int): Boolean {
